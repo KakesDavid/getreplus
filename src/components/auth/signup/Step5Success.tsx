@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PartyPopper, ChevronRight, LayoutDashboard, Rocket } from 'lucide-react';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
+import emailjs from '@emailjs/browser';
 import { cn } from '@/lib/utils';
 
 interface StepProps {
@@ -12,18 +13,30 @@ interface StepProps {
 
 export function Step5Success({ data }: StepProps) {
   useEffect(() => {
-    // Simulated EmailJS welcome email side effect
+    // Primary Welcome Email via EmailJS
     const sendWelcomeEmail = async () => {
       try {
-        console.log(`[EmailJS] Sending welcome email to ${data.email}...`);
-        // Mock call: await emailjs.send(...)
+        // These credentials should be replaced with actual EmailJS keys in production
+        // parameters: to_email, to_name, username, platform_url
+        await emailjs.send(
+          'YOUR_SERVICE_ID', 
+          'YOUR_TEMPLATE_ID', 
+          {
+            to_email: data.email,
+            to_name: data.fullName,
+            username: data.username,
+            platform_url: window.location.origin,
+          },
+          'YOUR_PUBLIC_KEY'
+        );
       } catch (err) {
-        console.warn('Welcome email failed to send, but user creation was successful.');
+        // Fail silently as per requirement: do not block UI or show error to user
+        console.warn('Welcome email failed to send, but user creation was successful.', err);
       }
     };
     
     sendWelcomeEmail();
-  }, [data.email]);
+  }, [data.email, data.fullName, data.username]);
 
   return (
     <div className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500">
