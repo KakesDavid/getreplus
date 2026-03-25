@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -6,7 +7,7 @@ import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
 import { validateFullName, validateUsername, validatePhone } from '@/utils/validators';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 
 interface StepProps {
@@ -39,9 +40,9 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     const timer = setTimeout(async () => {
       setUsernameStatus('loading');
       try {
-        const q = query(collection(db, 'userProfiles'), where('username', '==', data.username.toLowerCase()), limit(1));
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
+        const docRef = doc(db, 'usernames', data.username.toLowerCase());
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
           setUsernameStatus('valid');
           setUsernameError(null);
         } else {
@@ -67,16 +68,28 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     const timer = setTimeout(async () => {
       setReferralStatus('loading');
       try {
-        const q = query(collection(db, 'userProfiles'), where('referralCode', '==', data.referralCode.toUpperCase()), where('isActive', '==', true), limit(1));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-          const referrer = snapshot.docs[0].data();
-          setReferralStatus('valid');
-          setReferralInfo(`Referred by ${referrer.fullName}`);
-          setReferralError(null);
+        // First check the referralCode lookup
+        const codeRef = doc(db, 'referralCodes', data.referralCode.toUpperCase());
+        const codeSnap = await getDoc(codeRef);
+        
+        if (codeSnap.exists()) {
+          const referrerUid = codeSnap.data().uid;
+          // Verify if the user is active
+          const userRef = doc(db, 'users', referrerUid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists()) {
+            const referrer = userSnap.data();
+            setReferralStatus('valid');
+            setReferralInfo(`Referred by ${referrer.fullName}`);
+            setReferralError(null);
+          } else {
+            setReferralStatus('invalid');
+            setReferralError('Referrer not found.');
+          }
         } else {
           setReferralStatus('invalid');
-          setReferralError('Invalid or inactive referral code.');
+          setReferralError('Invalid referral code.');
           setReferralInfo(null);
         }
       } catch (e) {
@@ -152,7 +165,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
         <div className="pt-8 border-t border-border-subtle mt-8">
           <AuthInput
             label="Referral Code (Optional)"
-            placeholder="GETR-ABC123"
+            placeholder="GETR-ABC12345"
             leftIcon={<Tag />}
             value={data.referralCode}
             onChange={(e) => onUpdate({ referralCode: e.target.value.toUpperCase() })}

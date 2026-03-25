@@ -11,6 +11,7 @@ import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/
 import { useFirestore, useAuth } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { getAuthErrorMessage } from '@/utils/firebaseErrors';
+import Link from 'next/link';
 
 interface StepProps {
   data: SignupData;
@@ -37,7 +38,8 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     const timer = setTimeout(async () => {
       setEmailStatus('loading');
       try {
-        const q = query(collection(db, 'userProfiles'), where('email', '==', data.email.toLowerCase()), limit(1));
+        // Querying the 'users' collection as per backend.json
+        const q = query(collection(db, 'users'), where('email', '==', data.email.toLowerCase()), limit(1));
         const snapshot = await getDocs(q);
         if (snapshot.empty) {
           setEmailStatus('valid');
@@ -117,7 +119,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
             </label>
             <div className="group relative">
               <Info size={14} className="text-ivory-30 cursor-help" />
-              <div className="absolute bottom-full right-0 mb-8 w-200 p-12 bg-surface border border-gold-border rounded-lg text-[11px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl">
+              <div className="absolute bottom-full right-0 mb-8 w-[200px] p-12 bg-surface border border-gold-border rounded-lg text-[11px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl">
                 Use at least 8 characters with a mix of letters, numbers, and symbols.
               </div>
             </div>
@@ -156,7 +158,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
               required
             />
             <div className={cn(
-              "w-22 h-22 rounded-md border-1.5 transition-all flex items-center justify-center",
+              "w-[22px] h-[22px] rounded-md border-[1.5px] transition-all flex items-center justify-center",
               data.termsAccepted ? "bg-gold-gradient border-transparent" : "border-white-20 bg-input-bg"
             )}>
               {data.termsAccepted && <Check size={14} className="text-obsidian animate-in zoom-in-50 duration-200" />}

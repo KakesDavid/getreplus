@@ -1,175 +1,56 @@
-/**
- * FIRESTORE SECURITY RULES
- * 
- * Core Philosophy: 
- * This ruleset implements a strict User-Ownership model. Most data is siloed within user-specific 
- * paths to ensure strong isolation. The system prioritizes "Authorization Independence," 
- * meaning rules rely on the document path and internal ownership fields rather than 
- * performing expensive cross-document lookups (get() calls).
- * 
- * Data Structure:
- * - /userProfiles/{userId}: Private user data. Document ID equals the Auth UID.
- * - /userProfiles/{userId}/{subcollection}: User-specific activity (Transactions, Referrals, etc.).
- * - /plans/{planId}: Global, read-only configuration for membership levels.
- * - /supportTickets/{ticketId}: Top-level collection for inquiries, allowing public submission.
- * 
- * Key Security Decisions:
- * 1. Path-Based Authorization: All subcollections under /userProfiles/{userId} are strictly 
- *    protected by the {userId} wildcard, ensuring users can only access their own data tree.
- * 2. Immutable Ownership: Critical relational fields (like userId, referrerId) are 
- *    enforced on creation and made immutable during updates to prevent data hijacking.
- * 3. Ledger Integrity: Financial records (Transactions) and Activity logs are set to 
- *    be append-only (create allowed, update/delete denied) to preserve audit trails.
- * 4. Flexible Schema: In this prototyping phase, rules do not enforce data types or 
- *    full object shapes, allowing for rapid front-end iteration.
- * 
- * Denormalization for Authorization:
- * Documents in user subcollections (e.g., Transactions) denormalize the `userId` 
- * directly on the document. This allows the rules to verify that the data matches 
- * the path without requiring a read of the parent UserProfile.
- */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- GLOBAL HELPER FUNCTIONS ---
-
-    /** @description Checks if the request is from a signed-in user. */
+    // --- HELPERS ---
+    
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the authenticated user matches the provided ID. */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
     }
 
-    /** @description Checks ownership and ensures the document exists for state changes. */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
+    // --- COLLECTIONS ---
 
-    /** @description Validates that a field is not being changed during an update. */
-    function isUnchanged(field) {
-      return request.resource.data[field] == resource.data[field];
-    }
-
-    // --- COLLECTION RULES ---
-
-    /**
-     * @description Rules for global membership plans. Publicly readable by all.
-     * @path /plans/{planId}
-     * @allow (get, list) if true;
-     * @deny (create, update, delete) if true;
-     * @principle Public Read with Admin-Only Writes (Writes denied for prototyping).
-     */
-    match /plans/{planId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Rules for core user profiles. Users manage their own profile.
-     * @path /userProfiles/{userId}
-     * @allow (create) if auth.uid == userId; (get, update) if auth.uid == userId;
-     * @deny (list) for non-owners; (update) if changing the doc ID.
-     * @principle Self-creation and strict ownership for user identity.
-     */
-    match /userProfiles/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && isUnchanged('id');
-      allow delete: if false; // Profiles are typically deactivated, not deleted.
-    }
-
-    /**
-     * @description User-scoped referrals. Tied to the referrer's path.
-     * @path /userProfiles/{userId}/referrals/{referralId}
-     * @allow (create) if auth.uid == userId && referrerId == userId;
-     * @deny (create) if referrerId is mismatched.
-     * @principle Path-based ownership with relational integrity validation.
-     */
-    match /userProfiles/{userId}/referrals/{referralId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.referrerId == userId;
-      allow update: if isExistingOwner(userId) && isUnchanged('referrerId');
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Tracks progress of referral payout cycles.
-     * @path /userProfiles/{userId}/referralCycles/{cycleId}
-     * @allow (get, list, create, update) if owner;
-     * @deny (update) if attempting to change the owning userId.
-     * @principle User-scoped data isolation.
-     */
-    match /userProfiles/{userId}/referralCycles/{cycleId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && isUnchanged('userId');
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Financial transaction ledger. Append-only for security.
-     * @path /userProfiles/{userId}/transactions/{transactionId}
-     * @allow (create) if owner;
-     * @deny (update, delete) ALWAYS;
-     * @principle Ledger integrity - transactions must never be modified or deleted.
-     */
-    match /userProfiles/{userId}/transactions/{transactionId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update, delete: if false;
-    }
-
-    /**
-     * @description User withdrawal requests for payout.
-     * @path /userProfiles/{userId}/withdrawalRequests/{requestId}
-     * @allow (create) if owner;
-     * @deny (update) if changing ownership or amount after submission.
-     * @principle Owner-only creation with immutable core fields.
-     */
-    match /userProfiles/{userId}/withdrawalRequests/{requestId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && isUnchanged('userId') && isUnchanged('requestedAmount');
-      allow delete: if isExistingOwner(userId) && resource.data.status == 'pending';
-    }
-
-    /**
-     * @description Logs for feature-specific activities (Spin, Tap, etc.).
-     * @path /userProfiles/{userId}/featureActivities/{activityId}
-     * @allow (create) if owner;
-     * @deny (update, delete) ALWAYS;
-     * @principle Activity logs are immutable records of user interaction.
-     */
-    match /userProfiles/{userId}/featureActivities/{activityId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update, delete: if false;
-    }
-
-    /**
-     * @description Support tickets. Allows public submission and owner access.
-     * @path /supportTickets/{ticketId}
-     * @allow (create) if true; (get, update) if ticket.userId matches current user.
-     * @deny (list) for standard users to prevent data scraping.
-     * @principle Anonymous creation with authenticated owner-only access.
-     */
-    match /supportTickets/{ticketId} {
-      // Users can get their own ticket. Public listing is denied.
-      allow get: if (resource.data.userId != null && isOwner(resource.data.userId)) || !isSignedIn();
-      allow list: if false; // Listing tickets is an admin-only function.
-
-      // Anyone can create a ticket (logged in or guest).
-      // If logged in, we ensure they can't spoof another user's ID.
-      allow create: if (request.resource.data.userId == null) || (isOwner(request.resource.data.userId));
+    // USERS
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow create: if isOwner(uid) 
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.username.matches('^[a-z0-9_]{3,20}$')
+        && request.resource.data.phone.matches('^(07|08|09)[0-9]{9}$')
+        && request.resource.data.referralCode.matches('^GETR-[A-Z0-9]{8}$')
+        && request.resource.data.accountStatus == 'pending'
+        && request.resource.data.isActive == false;
       
-      // Users can update their own tickets (e.g., adding info).
-      allow update: if resource.data.userId != null && isExistingOwner(resource.data.userId);
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['bankAccount', 'accountStatus', 'isActive', 'updatedAt', 'lastLoginAt']);
+      
       allow delete: if false;
+    }
+
+    // USERNAMES LOOKUP
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // REFERRAL CODES LOOKUP
+    match /referralCodes/{code} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // PREVENT OTHER WRITES
+    match /{path=**} {
+      allow read, write: if false;
     }
   }
 }

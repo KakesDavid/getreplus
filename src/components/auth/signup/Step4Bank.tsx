@@ -1,12 +1,12 @@
+
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShieldCheck, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Landmark } from 'lucide-react';
+import { ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { BankSelector } from './BankSelector';
 import { SignupData } from '@/hooks/useSignupState';
-import { cn } from '@/lib/utils';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 
 interface StepProps {
@@ -19,18 +19,12 @@ interface StepProps {
 export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
   const db = useFirestore();
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
 
-  // Simulated Bank Verification (In a real app, this calls your API)
   const verifyAccount = useCallback(async (account: string, bank: string) => {
     setIsVerifying(true);
-    setVerificationError(null);
-
     // Mock delay for Paystack simulation
     setTimeout(() => {
-      // Logic simulation: If account starts with '9', fail name match for demo
-      // In real life, this response comes from the server
       const mockVerifiedName = data.fullName.toUpperCase();
       const nameMatch = true;
 
@@ -48,7 +42,6 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
       verifyAccount(data.accountNumber, data.selectedBank);
     }
     
-    // Clear verification if input changes
     if (data.bankVerified && (data.accountNumber.length !== 10 || !data.selectedBank)) {
       onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
     }
@@ -72,27 +65,49 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     try {
       if (!data.firebaseUserUid) throw new Error('Auth state missing');
 
-      // Create main user profile document
-      await setDoc(doc(db, 'userProfiles', data.firebaseUserUid), {
-        id: data.firebaseUserUid,
+      const batch = writeBatch(db);
+
+      // 1. Create main user document
+      const userRef = doc(db, 'users', data.firebaseUserUid);
+      batch.set(userRef, {
+        uid: data.firebaseUserUid,
         fullName: data.fullName,
         username: data.username.toLowerCase(),
-        phoneNumber: data.phone,
-        email: data.email,
+        phone: data.phone,
+        email: data.email.toLowerCase(),
         referralCode: refCode,
         referredBy: data.referralCode || null,
-        bankName: data.selectedBank,
-        bankAccountNumber: data.accountNumber,
-        bankAccountName: data.verifiedAccountName,
-        walletBalance: 0,
-        totalEarned: 0,
-        totalWithdrawn: 0,
-        currentPlanId: 'none',
+        bankAccount: {
+          bankName: data.selectedBank,
+          bankCode: "000", // Would be actual code in production
+          accountNumber: data.accountNumber,
+          accountName: data.verifiedAccountName,
+          verifiedAt: new Date().toISOString()
+        },
+        accountStatus: 'pending',
         isActive: false,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp(),
+        signupIp: null, // Would capture server-side or via API
+        deviceFingerprint: null
       });
 
+      // 2. Create username lookup
+      const usernameRef = doc(db, 'usernames', data.username.toLowerCase());
+      batch.set(usernameRef, {
+        uid: data.firebaseUserUid,
+        createdAt: serverTimestamp()
+      });
+
+      // 3. Create referral code lookup
+      const refCodeRef = doc(db, 'referralCodes', refCode);
+      batch.set(refCodeRef, {
+        uid: data.firebaseUserUid,
+        createdAt: serverTimestamp()
+      });
+
+      await batch.commit();
       onNext();
     } catch (error) {
       console.error(error);
@@ -115,7 +130,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
           <span className="text-[12px] font-body font-medium text-ivory-40 uppercase tracking-widest">Step 4 of 4</span>
         </div>
         <h2 className="font-headline font-bold text-ivory text-22">Link your bank account</h2>
-        <p className="text-ivory-50 text-13 mt-4 leading-relaxed">Required to receive your automated Friday payouts.</p>
+        <p className="text-ivory-50 text-13 mt-4 leading-relaxed">Required to receive your weekly payouts.</p>
       </div>
 
       <div className="bg-emerald/10 border border-emerald/20 rounded-xl p-12 flex items-center gap-12 mb-24">
