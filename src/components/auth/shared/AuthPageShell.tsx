@@ -5,7 +5,7 @@ import { MobileBrandHeader } from './MobileBrandHeader';
 
 export function AuthPageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-svh bg-obsidian flex flex-col lg:flex-row overflow-x-hidden relative">
+    <div className="min-h-svh bg-obsidian text-ivory flex flex-col lg:flex-row overflow-x-hidden relative">
       {/* Dynamic Glow Backgrounds */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald/5 rounded-full blur-[140px] pointer-events-none" />

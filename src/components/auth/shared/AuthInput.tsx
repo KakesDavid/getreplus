@@ -69,11 +69,11 @@ export function AuthInput({
           aria-invalid={validationState === 'invalid'}
           aria-describedby={errorId}
           className={cn(
-            "w-full h-[54px] bg-input-bg border-[1.5px] rounded-[12px] text-ivory text-[16px] font-body transition-all duration-200 outline-none placeholder:text-ivory-25",
+            "w-full h-[54px] bg-input-bg border-[1.5px] rounded-[12px] text-white text-[16px] font-body transition-all duration-200 outline-none placeholder:text-ivory-25",
             leftPaddingClassName || (leftIcon ? "pl-[48px]" : "px-16"),
             getBorderColor(),
             "shadow-sm focus-within:shadow-focus-ring",
-            "[&:-webkit-autofill]:shadow-[inset_0_0_0_9999px_#1A1A1A] [&:-webkit-autofill]:text-ivory [caret-color:var(--color-gold)]",
+            "[&:-webkit-autofill]:shadow-[inset_0_0_0_9999px_#1A1A1A] [&:-webkit-autofill]:[-webkit-text-fill-color:white] [caret-color:var(--color-gold)]",
             className
           )}
           {...props}
