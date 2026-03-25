@@ -1,0 +1,690 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Stores detailed information about a GetrePlus member, including personal data, account status, and associated financial details for earning and withdrawals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique username chosen by the user, used as part of their referral link."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "User's full name, used for bank verification."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "User's contact phone number."
+        },
+        "referralCode": {
+          "type": "string",
+          "description": "The unique code or username segment used in the user's referral link (e.g., 'yourname' in getreplus.com/ref/yourname)."
+        },
+        "currentPlanId": {
+          "type": "string",
+          "description": "Reference to the user's currently active Plan. (Relationship: Plan 1:N UserProfile)"
+        },
+        "walletBalance": {
+          "type": "number",
+          "description": "Current balance in the user's earning wallet."
+        },
+        "totalEarned": {
+          "type": "number",
+          "description": "Lifetime total amount earned by the user across all activities."
+        },
+        "totalWithdrawn": {
+          "type": "number",
+          "description": "Lifetime total amount withdrawn by the user."
+        },
+        "bankAccountName": {
+          "type": "string",
+          "description": "The name on the user's bank account for payouts, verified via Paystack."
+        },
+        "bankAccountNumber": {
+          "type": "string",
+          "description": "The user's bank account number for direct payouts."
+        },
+        "bankName": {
+          "type": "string",
+          "description": "The name of the user's bank for direct payouts."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if the user's account is currently active."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "username",
+        "fullName",
+        "phoneNumber",
+        "referralCode",
+        "currentPlanId",
+        "walletBalance",
+        "bankAccountName",
+        "bankAccountNumber",
+        "bankName",
+        "isActive",
+        "createdAt"
+      ]
+    },
+    "Plan": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Plan",
+      "type": "object",
+      "description": "Defines the different membership plans available on GetrePlus, outlining their costs and associated benefits.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Plan entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the plan (e.g., \"Standard\", \"Premium\")."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the plan's offerings and benefits."
+        },
+        "activationFee": {
+          "type": "number",
+          "description": "The base cost to activate this plan."
+        },
+        "paystackProcessingFee": {
+          "type": "number",
+          "description": "The additional Paystack processing fee charged for plan activation."
+        },
+        "referralRewardPerFriend": {
+          "type": "number",
+          "description": "The amount earned by the referrer for each successful friend activation under this plan."
+        },
+        "tapsPerDay": {
+          "type": "number",
+          "description": "The number of daily taps allowed for the Tap to Earn feature under this plan."
+        },
+        "tapEarnPerTap": {
+          "type": "number",
+          "description": "The amount earned per tap for the Tap to Earn feature under this plan."
+        },
+        "spinsPerSession": {
+          "type": "number",
+          "description": "The number of spins allowed per Spin Wheel session under this plan."
+        },
+        "spinSessionCost": {
+          "type": "number",
+          "description": "The cost for one Spin Wheel session under this plan."
+        },
+        "mysteryBoxCost": {
+          "type": "number",
+          "description": "The cost to open one Mystery Box under this plan."
+        },
+        "priorityWithdrawal": {
+          "type": "boolean",
+          "description": "Indicates if this plan offers priority processing for withdrawal requests."
+        },
+        "weeklyBonusEligibility": {
+          "type": "boolean",
+          "description": "Indicates if members on this plan are eligible for weekly leaderboard bonuses."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "activationFee",
+        "paystackProcessingFee",
+        "referralRewardPerFriend",
+        "tapsPerDay",
+        "tapEarnPerTap",
+        "spinsPerSession",
+        "spinSessionCost",
+        "mysteryBoxCost",
+        "priorityWithdrawal",
+        "weeklyBonusEligibility"
+      ]
+    },
+    "Referral": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Referral",
+      "type": "object",
+      "description": "Records an instance of a user successfully referring a friend to GetrePlus, leading to an activation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Referral entity."
+        },
+        "referrerId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the member who made the referral. (Relationship: UserProfile 1:N Referral)"
+        },
+        "referredId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the new member who was referred and activated their account. (Relationship: UserProfile 1:N Referral)"
+        },
+        "referralCycleId": {
+          "type": "string",
+          "description": "Reference to the ReferralCycle this referral is counted towards for the referrer. (Relationship: ReferralCycle 1:N Referral)"
+        },
+        "amountEarned": {
+          "type": "number",
+          "description": "The amount earned by the referrer for this specific successful referral."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the referral (e.g., \"pending\", \"activated\", \"paid\")."
+        },
+        "referredPlanId": {
+          "type": "string",
+          "description": "Reference to the Plan activated by the referred user at the time of referral. (Relationship: Plan 1:N Referral)"
+        },
+        "activatedAt": {
+          "type": "string",
+          "description": "Timestamp when the referred user activated their account.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the referral record was initially created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "referrerId",
+        "referredId",
+        "referralCycleId",
+        "amountEarned",
+        "status",
+        "referredPlanId",
+        "activatedAt",
+        "createdAt"
+      ]
+    },
+    "ReferralCycle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ReferralCycle",
+      "type": "object",
+      "description": "Tracks a user's progress towards completing the required number of referrals (e.g., 5) to unlock a payout.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ReferralCycle entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the member owning this referral cycle. (Relationship: UserProfile 1:N ReferralCycle)"
+        },
+        "planId": {
+          "type": "string",
+          "description": "Reference to the Plan active for the user when this cycle was initiated. (Relationship: Plan 1:N ReferralCycle)"
+        },
+        "referralIds": {
+          "type": "array",
+          "description": "An array of Referral IDs that are successfully completed as part of this cycle. (Relationship: ReferralCycle 1:N Referral)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "referralsCompleted": {
+          "type": "number",
+          "description": "Current count of successful referrals within this cycle."
+        },
+        "requiredReferrals": {
+          "type": "number",
+          "description": "The total number of referrals required to complete this cycle (e.g., 5)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the referral cycle (e.g., \"active\", \"completed\", \"pending_withdrawal\", \"withdrawn\")."
+        },
+        "totalCycleEarnings": {
+          "type": "number",
+          "description": "The total amount earned from this cycle once completed."
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "Timestamp when the referral cycle was initiated.",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "Timestamp when the cycle reached the required number of completed referrals.",
+          "format": "date-time"
+        },
+        "withdrawalRequestId": {
+          "type": "string",
+          "description": "Reference to the WithdrawalRequest associated with the payout for this completed cycle. (Relationship: ReferralCycle 1:1 WithdrawalRequest)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "planId",
+        "referralIds",
+        "referralsCompleted",
+        "requiredReferrals",
+        "status",
+        "startedAt"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Logs all financial movements and activities within a user's GetrePlus wallet, serving as a comprehensive ledger.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Transaction entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the member involved in the transaction. (Relationship: UserProfile 1:N Transaction)"
+        },
+        "type": {
+          "type": "string",
+          "description": "Categorization of the transaction (e.g., \"activation_fee\", \"referral_bonus\", \"spin_wheel_win\", \"mystery_box_win\", \"tap_earn\", \"withdrawal_request\", \"withdrawal_payout\", \"send_money_out\", \"receive_money_in\", \"mystery_box_cost\", \"spin_session_cost\")."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The monetary value of the transaction (positive for earnings/deposits, negative for costs/withdrawals)."
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency of the transaction (e.g., \"NGN\")."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the transaction (e.g., \"pending\", \"successful\", \"failed\", \"reversed\")."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief, human-readable description of the transaction (e.g., \"Premium Plan Activation\", \"₦500 Referral Bonus\")."
+        },
+        "referenceEntityId": {
+          "type": "string",
+          "description": "Optional: ID of a related entity, such as ReferralId, FeatureActivityId, or WithdrawalRequestId, providing context to the transaction."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp when the transaction was recorded.",
+          "format": "date-time"
+        },
+        "balanceAfterTransaction": {
+          "type": "number",
+          "description": "The user's wallet balance immediately after this transaction was processed."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "type",
+        "amount",
+        "currency",
+        "status",
+        "timestamp",
+        "balanceAfterTransaction"
+      ]
+    },
+    "WithdrawalRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WithdrawalRequest",
+      "type": "object",
+      "description": "Details a user's request to transfer earned funds from their GetrePlus wallet to their verified bank account.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WithdrawalRequest entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the member requesting the withdrawal. (Relationship: UserProfile 1:N WithdrawalRequest)"
+        },
+        "referralCycleIds": {
+          "type": "array",
+          "description": "An array of ReferralCycle IDs whose completed earnings are included in this withdrawal request. (Relationship: ReferralCycle N:N WithdrawalRequest)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requestedAmount": {
+          "type": "number",
+          "description": "The total amount the user requested to withdraw."
+        },
+        "processingFee": {
+          "type": "number",
+          "description": "Any fees applied during the withdrawal processing."
+        },
+        "netAmount": {
+          "type": "number",
+          "description": "The net amount expected to be received by the user after any fees."
+        },
+        "bankAccountName": {
+          "type": "string",
+          "description": "The name on the bank account to which the funds are to be transferred for this specific request."
+        },
+        "bankAccountNumber": {
+          "type": "string",
+          "description": "The bank account number for this specific withdrawal request."
+        },
+        "bankName": {
+          "type": "string",
+          "description": "The name of the bank for this specific withdrawal request."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the withdrawal request (e.g., \"pending\", \"approved\", \"paid\", \"rejected\")."
+        },
+        "requestedAt": {
+          "type": "string",
+          "description": "Timestamp when the withdrawal request was submitted by the user.",
+          "format": "date-time"
+        },
+        "processedAt": {
+          "type": "string",
+          "description": "Timestamp when the withdrawal request was approved and the payment was initiated/completed.",
+          "format": "date-time"
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "Reference to the Transaction record that represents the actual payout of this withdrawal. (Relationship: WithdrawalRequest 1:1 Transaction)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "referralCycleIds",
+        "requestedAmount",
+        "netAmount",
+        "bankAccountName",
+        "bankAccountNumber",
+        "bankName",
+        "status",
+        "requestedAt"
+      ]
+    },
+    "FeatureActivity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FeatureActivity",
+      "type": "object",
+      "description": "Logs specific interactions and earnings derived from bonus features like Spin Wheel, Mystery Box, and Tap to Earn.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the FeatureActivity entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile of the member performing the activity. (Relationship: UserProfile 1:N FeatureActivity)"
+        },
+        "featureName": {
+          "type": "string",
+          "description": "Name of the feature involved (e.g., \"SpinWheel\", \"MysteryBox\", \"TapToEarn\", \"SendMoney\", \"LeaderboardBonus\")."
+        },
+        "activityDetails": {
+          "type": "string",
+          "description": "A JSON string or descriptive text containing feature-specific details of the activity (e.g., \"spins: 2, prize: ₦120\" for Spin Wheel; \"taps: 100\" for Tap to Earn)."
+        },
+        "amountEarned": {
+          "type": "number",
+          "description": "The amount earned by the user from this specific feature activity (can be 0 if the activity is not an earning event)."
+        },
+        "costIncurred": {
+          "type": "number",
+          "description": "The cost incurred by the user for this specific feature activity (e.g., Spin Wheel session cost, Mystery Box cost)."
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "Reference to the associated Transaction record, if this activity resulted in a monetary transaction. (Relationship: FeatureActivity 1:1 Transaction)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp when the feature activity occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "featureName",
+        "amountEarned",
+        "timestamp"
+      ]
+    },
+    "SupportTicket": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SupportTicket",
+      "type": "object",
+      "description": "Stores inquiries submitted by users through the contact form, allowing for tracking and resolution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SupportTicket entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Optional: Reference to the UserProfile of the member who submitted the ticket, if logged in. (Relationship: UserProfile 1:N SupportTicket)"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "The full name provided by the user in the contact form."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address provided by the user for communication.",
+          "format": "email"
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject line or brief summary of the user's inquiry."
+        },
+        "message": {
+          "type": "string",
+          "description": "The detailed content of the support message from the user."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the ticket (e.g., \"open\", \"in_progress\", \"closed\", \"resolved\")."
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "Timestamp when the support ticket was submitted.",
+          "format": "date-time"
+        },
+        "resolvedAt": {
+          "type": "string",
+          "description": "Optional: Timestamp when the support ticket was resolved.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "fullName",
+        "email",
+        "message",
+        "status",
+        "submittedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/userProfiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores detailed information for a GetrePlus member, where the document ID matches the Firebase Auth UID. Access is restricted to the owning user. Includes denormalized 'username' and 'referralCode' fields for uniqueness checks (handled by security rules, not additional collections).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/plans/{planId}",
+        "definition": {
+          "entityName": "Plan",
+          "schema": {
+            "$ref": "#/backend/entities/Plan"
+          },
+          "description": "Defines different membership plans available on GetrePlus. These documents are publicly readable by all authenticated and unauthenticated users.",
+          "params": [
+            {
+              "name": "planId",
+              "description": "The unique identifier for a specific membership plan."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/userProfiles/{userId}/referrals/{referralId}",
+        "definition": {
+          "entityName": "Referral",
+          "schema": {
+            "$ref": "#/backend/entities/Referral"
+          },
+          "description": "Records an instance of a user successfully referring a friend. The 'referrerId' field in the document MUST match the '{userId}' in the path for authorization independence. Each document also contains denormalized 'referredId', 'referredPlanId', and 'status' for direct rule evaluation.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the referrer (owner of this referral record)."
+            },
+            {
+              "name": "referralId",
+              "description": "The unique identifier for the referral event."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/userProfiles/{userId}/referralCycles/{cycleId}",
+        "definition": {
+          "entityName": "ReferralCycle",
+          "schema": {
+            "$ref": "#/backend/entities/ReferralCycle"
+          },
+          "description": "Tracks a user's progress towards completing a referral payout cycle. The 'userId' field in the document MUST match the '{userId}' in the path for authorization independence. Denormalizes 'planId' and 'status' for efficient rule evaluation.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user owning this referral cycle."
+            },
+            {
+              "name": "cycleId",
+              "description": "The unique identifier for the referral cycle."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/userProfiles/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Logs all financial movements and activities within a user's wallet. The 'userId' field in the document MUST match the '{userId}' in the path for authorization independence. Contains denormalized 'type', 'amount', and 'status' for direct rule evaluation.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user involved in the transaction."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for the transaction record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/userProfiles/{userId}/withdrawalRequests/{requestId}",
+        "definition": {
+          "entityName": "WithdrawalRequest",
+          "schema": {
+            "$ref": "#/backend/entities/WithdrawalRequest"
+          },
+          "description": "Details a user's request to transfer earned funds. The 'userId' field in the document MUST match the '{userId}' in the path for authorization independence. Denormalizes 'status' and 'requestedAmount' for efficient rule evaluation.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user requesting the withdrawal."
+            },
+            {
+              "name": "requestId",
+              "description": "The unique identifier for the withdrawal request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/userProfiles/{userId}/featureActivities/{activityId}",
+        "definition": {
+          "entityName": "FeatureActivity",
+          "schema": {
+            "$ref": "#/backend/entities/FeatureActivity"
+          },
+          "description": "Logs specific interactions and earnings from bonus features. The 'userId' field in the document MUST match the '{userId}' in the path for authorization independence. Denormalizes 'featureName' and 'amountEarned' for direct rule evaluation.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user performing the activity."
+            },
+            {
+              "name": "activityId",
+              "description": "The unique identifier for the feature activity record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/supportTickets/{ticketId}",
+        "definition": {
+          "entityName": "SupportTicket",
+          "schema": {
+            "$ref": "#/backend/entities/SupportTicket"
+          },
+          "description": "Stores inquiries submitted by users. If a 'userId' is present, it must match the submitting user's UID for personal access. This collection is primarily managed by support staff, with users having read/write access to their own tickets.",
+          "params": [
+            {
+              "name": "ticketId",
+              "description": "The unique identifier for the support ticket."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure prioritizes secure, scalable, and debuggable authorization rules in line with the provided principles. Authorization Independence & Denormalization: The core strategy to achieve Authorization Independence is path-based ownership and selective denormalization. 1. User-Owned Data: All entities directly associated with a single user (Referral, ReferralCycle, Transaction, WithdrawalRequest, FeatureActivity) are structured as subcollections under the /userProfiles/{userId} collection. For instance, /userProfiles/{userId}/transactions/{transactionId}. Denormalization in practice: Each document within these subcollections (Transaction, Referral, etc.) explicitly includes the 'userId' field. This 'userId' field *must* match the '{userId}' wildcard in its path. This eliminates the need for expensive and complex get() calls to the parent UserProfile document in security rules to determine ownership. Rules can simply compare request.auth.uid with the {userId} wildcard and the document's own 'userId' field, making them atomic, efficient, and easy to debug. 2. Global Data: The Plan entity, being static and publicly readable, resides in a top-level collection /plans/{planId}. 3. Cross-Cutting Data (Support Tickets): SupportTicket is a top-level collection /supportTickets/{ticketId}. While it can optionally contain a 'userId', its access doesn't strictly depend on a hierarchical parent. Rules for SupportTicket will verify request.auth.uid against the document's 'userId' field for user-specific access, and potentially check for a global 'support' role for broader access. QAPs (Rules are not Filters): The structural segregation and path-based ownership directly support QAPs by ensuring secure list operations. 1. User-Specific Lists: For user-owned subcollections (e.g., /userProfiles/{userId}/transactions), users can only list documents within their own /userProfiles/{request.auth.uid}/transactions path. The rules enforce that the 'userId' in the path must match request.auth.uid, effectively pre-filtering results by ownership at the security rule level. This ensures that list queries are inherently secure and only return authorized data, preventing data leakage or unauthorized access. 2. Global Lists (Admin/Public): For collections like /plans, 'allow list: true' is set for public readability. For admin-level list operations across all userProfiles or supportTickets, an explicit check for an administrator role (e.g., exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))) would be enforced. This means list operations always return *all* data for which the caller is authorized, rather than relying on rules to implicitly filter data the user *shouldn't* see. Structural Segregation & Access Modeling: UserProfile: Resides at /userProfiles/{userId}, where 'userId' is the Firebase Auth UID, ensuring private user data is strictly isolated. Plan: /plans/{planId} is a global, read-only collection for all users. Hierarchical User Data: /userProfiles/{userId}/<subcollection> pattern is consistently used for Referral, ReferralCycle, Transaction, WithdrawalRequest, and FeatureActivity, enforcing strong ownership and simplifying rules for create, read, update, and delete operations to 'request.auth.uid == userId'. SupportTicket: A top-level collection /supportTickets/{ticketId} allows both logged-in users (who can access their own tickets via 'userId' field) and anonymous submissions, while enabling easier access for support staff. Global Roles (DBAC): Although not explicitly defined entities, system roles (e.g., 'admin', 'support') would be managed in dedicated top-level collections like /roles_admin/{adminId} or /roles_support/{supportId}. The existence of a document at roles_admin/$(request.auth.uid) would grant administrative privileges, adhering to the 'existence over content' principle for DBAC. (Note: These specific role paths are not included in firestorePaths as the 'Role' entity was not provided in the input schema.) This design minimizes get() calls for authorization, ensures predictable security posture per collection, and provides clear pathways for scalable and auditable access control."
+  }
+}

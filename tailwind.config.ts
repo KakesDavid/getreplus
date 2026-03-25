@@ -1,0 +1,131 @@
+import type {Config} from 'tailwindcss';
+
+export default {
+  darkMode: ['class'],
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      spacing: {
+        '4': '4px',
+        '8': '8px',
+        '12': '12px',
+        '16': '16px',
+        '20': '20px',
+        '24': '24px',
+        '32': '32px',
+        '40': '40px',
+        '48': '48px',
+      },
+      fontFamily: {
+        body: ['Inter', 'sans-serif'],
+        headline: ['Syne', 'sans-serif'],
+        subheadline: ['Plus Jakarta Sans', 'sans-serif'],
+        code: ['Space Grotesk', 'monospace'],
+      },
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        obsidian: '#0D0D0D',
+        surface: '#111111',
+        'input-bg': '#1A1A1A',
+        gold: {
+          DEFAULT: '#B7862C',
+          dark: '#92650A',
+          glow: 'rgba(183,134,44,0.12)',
+          subtle: 'rgba(183,134,44,0.06)',
+          border: 'rgba(183,134,44,0.3)',
+          hover: 'rgba(183,134,44,0.08)',
+        },
+        emerald: {
+          DEFAULT: '#065F46',
+          subtle: 'rgba(6,78,59,0.15)',
+          border: 'rgba(6,78,59,0.3)',
+        },
+        error: {
+          DEFAULT: '#DC2626',
+          subtle: 'rgba(220,38,38,0.08)',
+          border: 'rgba(220,38,38,0.25)',
+        },
+        warning: {
+          orange: '#E97316',
+          yellow: '#EAB308',
+        },
+        ivory: {
+          DEFAULT: '#F5F0E8',
+          65: 'rgba(245,240,232,0.65)',
+          60: 'rgba(245,240,232,0.60)',
+          55: 'rgba(245,240,232,0.55)',
+          50: 'rgba(245,240,232,0.50)',
+          45: 'rgba(245,240,232,0.45)',
+          40: 'rgba(245,240,232,0.40)',
+          35: 'rgba(245,240,232,0.35)',
+          30: 'rgba(245,240,232,0.30)',
+          25: 'rgba(245,240,232,0.25)',
+        },
+        'border-default': 'rgba(255,255,255,0.08)',
+        'border-subtle': 'rgba(255,255,255,0.06)',
+        'white-20': 'rgba(255,255,255,0.20)',
+        'white-15': 'rgba(255,255,255,0.15)',
+        overlay: 'rgba(0,0,0,0.65)',
+      },
+      backgroundImage: {
+        'gold-gradient': 'linear-gradient(135deg, #B7862C, #92650A)',
+        'brand-panel-bg': 'linear-gradient(160deg, #064E3B 0%, #0D0D0D 100%)',
+        'obsidian-card': 'linear-gradient(180deg, #111111 0%, #0D0D0D 100%)',
+      },
+      boxShadow: {
+        'card-shadow': '0 24px 64px rgba(0,0,0,0.5)',
+        'button-glow': '0 4px 20px rgba(183,134,44,0.35)',
+        'button-glow-hover': '0 6px 28px rgba(183,134,44,0.45)',
+        'focus-ring': '0 0 0 3px rgba(183,134,44,0.12)',
+        'card-glow-subtle': '0 0 32px rgba(183,134,44,0.08)',
+        'dot-active-glow': '0 0 8px rgba(183,134,44,0.5)',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: {height: '0'},
+          to: {height: 'var(--radix-accordion-content-height)'},
+        },
+        'accordion-up': {
+          from: {height: 'var(--radix-accordion-content-height)'},
+          to: {height: '0'},
+        },
+        shake: {
+          '0%, 100%': {transform: 'translateX(0)'},
+          '20%, 60%': {transform: 'translateX(-6px)'},
+          '40%, 80%': {transform: 'translateX(6px)'},
+          '90%': {transform: 'translateX(-4px)'},
+          '95%': {transform: 'translateX(4px)'},
+        },
+        'pulse-glow': {
+          '0%, 100%': {transform: 'scale(1)', opacity: '1'},
+          '50%': {transform: 'scale(1.04)', opacity: '0.7'},
+        },
+        levitate: {
+          '0%, 100%': {transform: 'translateY(0)'},
+          '50%': {transform: 'translateY(-8px)'},
+        },
+        'bounce-gentle': {
+          '0%, 100%': {transform: 'translateY(0)'},
+          '50%': {transform: 'translateY(-6px)'},
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        shake: 'shake 350ms ease-out',
+        'pulse-glow': 'pulse-glow 2.5s infinite',
+        levitate: 'levitate 4s infinite',
+        'bounce-gentle': 'bounce-gentle 2s infinite',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')],
+} satisfies Config;

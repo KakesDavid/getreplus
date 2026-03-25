@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-phone",
+      "description": "Premium iPhone mockup showing GetrePlus dashboard",
+      "imageUrl": "https://picsum.photos/seed/getreplus-hero/600/1200",
+      "imageHint": "iphone dashboard"
+    },
+    {
+      "id": "step-1",
+      "description": "Hand holding phone with naira symbol",
+      "imageUrl": "https://picsum.photos/seed/step1/200/200",
+      "imageHint": "mobile money"
+    },
+    {
+      "id": "step-2",
+      "description": "Network of friends silhouettes",
+      "imageUrl": "https://picsum.photos/seed/step2/200/200",
+      "imageHint": "social network"
+    },
+    {
+      "id": "step-3",
+      "description": "Bank transfer success notification",
+      "imageUrl": "https://picsum.photos/seed/step3/200/200",
+      "imageHint": "bank success"
+    }
+  ]
+}

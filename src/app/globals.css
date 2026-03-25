@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 30% 94%; /* Warm Ivory #F5F0E8 */
+    --foreground: 0 0% 5%;    /* Obsidian #0D0D0D */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+    --popover: 36 30% 94%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 39 61% 45%;    /* Antique Gold #B7862C */
+    --primary-foreground: 0 0% 5%;
+    --secondary: 161 85% 16%; /* Midnight Green #064E3B */
+    --secondary-foreground: 36 30% 94%;
+    --muted: 36 10% 85%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 39 61% 45%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%; /* Error Red #DC2626 */
+    --destructive-foreground: 0 0% 98%;
+    --border: 39 61% 45% / 0.2;
+    --input: 0 0% 89.8%;
+    --ring: 39 61% 45%;
+    --radius: 0.75rem;
+
+    /* Custom CSS variables from proposal */
+    --color-green-primary: #064E3B;
+    --color-green-mid: #065F46;
+    --color-gold: #B7862C;
+    --color-gold-dark: #92650A;
+    --color-obsidian: #0D0D0D;
+    --color-ivory: #F5F0E8;
+    --color-error: #DC2626;
+    --color-whatsapp: #25D366;
+  }
+
+  .dark {
+    --background: 0 0% 5%;    /* Obsidian #0D0D0D */
+    --foreground: 36 30% 94%; /* Warm Ivory #F5F0E8 */
+    --card: 0 0% 5%;
+    --card-foreground: 36 30% 94%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 36 30% 94%;
+    --primary: 39 61% 45%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 161 85% 16%;
+    --secondary-foreground: 36 30% 94%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 36 30% 94% / 0.6;
+    --accent: 39 61% 45%;
+    --accent-foreground: 36 30% 94%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 36 30% 94%;
+    --border: 39 61% 45% / 0.2;
+    --input: 0 0% 14.9%;
+    --ring: 39 61% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .hero-gradient {
+    background: linear-gradient(160deg, #064E3B 0%, #0D0D0D 50%, #064E3B 100%);
+  }
+  .gold-gradient {
+    background: linear-gradient(135deg, #B7862C, #92650A);
+  }
+  .premium-card-gradient {
+    background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 100%);
+  }
+  .trust-gradient {
+    background: linear-gradient(180deg, #064E3B 0%, #043927 100%);
+  }
+  .gold-glow {
+    box-shadow: 0 0 40px rgba(183, 134, 44, 0.12);
+  }
+  .text-shimmer {
+    background: linear-gradient(90deg, #B7862C, #D4A843, #B7862C);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .wavy-underline {
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: var(--color-gold);
+  }
+
+  /* Success Drawing Animations */
+  .draw-circle {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: draw 0.6s ease-out forwards;
+  }
+  .draw-check {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: draw 0.4s ease-out 0.4s forwards;
+  }
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+
+@keyframes levitate {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.animate-levitate {
+  animation: levitate 4s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.animate-pulse-ring::before {
+  content: '';
+  @apply absolute inset-0 rounded-full bg-[var(--color-whatsapp)] opacity-60;
+  animation: pulse-ring 2.5s ease-out infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor-blink {
+  animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes flip {
+  0% { transform: rotateX(0deg); }
+  25% { transform: rotateX(-90deg); }
+  75% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+.animate-flip {
+  animation: flip 0.3s ease-in-out;
+}
+
+@keyframes float-bg {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(2%, 4%) rotate(1deg); }
+  66% { transform: translate(-1%, 2%) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.animate-float-bg {
+  animation: float-bg 20s ease-in-out infinite;
+}
+
+@keyframes drift-slow {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-drift-slow {
+  stroke-dasharray: 1000;
+  animation: drift-slow 60s linear infinite;
+}
+
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+}
