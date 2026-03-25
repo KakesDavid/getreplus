@@ -93,7 +93,7 @@ export function AuthInput({
           </div>
         )}
 
-        <div className="absolute right-4 top-0 w-44 h-full flex items-center justify-center">
+        <div className="absolute right-4 top-0 w-40 h-full flex items-center justify-center pointer-events-none">
           {validationState === 'loading' && <Loader2 className="animate-spin text-gold" size={18} />}
           {validationState === 'valid' && <CheckCircle2 className="text-emerald animate-in zoom-in-50 duration-300" size={18} />}
           {validationState === 'invalid' && <XCircle className="text-error animate-in fade-in duration-200" size={18} />}
@@ -107,7 +107,11 @@ export function AuthInput({
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           )}
-          {validationState === 'idle' && !isPassword && rightElement}
+          {validationState === 'idle' && !isPassword && (
+            <div className="pointer-events-auto flex items-center justify-center h-full w-full">
+              {rightElement}
+            </div>
+          )}
         </div>
       </div>
 
