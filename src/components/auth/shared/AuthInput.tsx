@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useRef } from 'react';
 import { Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
@@ -9,8 +8,8 @@ interface AuthInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;
   rightElement?: React.ReactNode;
   validationState?: 'idle' | 'loading' | 'valid' | 'invalid';
-  errorMessage?: string | null;
-  helperText?: string;
+  errorMessage?: React.ReactNode;
+  helperText?: React.ReactNode;
   leftPaddingClassName?: string;
 }
 
@@ -114,14 +113,14 @@ export function AuthInput({
 
       <div aria-live="polite" className="min-h-[20px] mt-4">
         {errorMessage && (
-          <p id={errorId} className="text-[13px] font-body text-error animate-in fade-in slide-in-from-top-1 duration-200">
+          <div id={errorId} className="text-[13px] font-body text-error animate-in fade-in slide-in-from-top-1 duration-200">
             {errorMessage}
-          </p>
+          </div>
         )}
         {helperText && !errorMessage && (
-          <p className="text-[12px] font-body text-ivory-40">
+          <div className="text-[12px] font-body text-ivory-40">
             {helperText}
-          </p>
+          </div>
         )}
       </div>
     </div>

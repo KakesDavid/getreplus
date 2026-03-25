@@ -31,9 +31,9 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     if (ref && !data.referralCode) {
       onUpdate({ referralCode: ref.toUpperCase() });
     }
-  }, []);
+  }, [searchParams, data.referralCode, onUpdate]);
 
-  // Debounced Username Check
+  // Debounced Username Check (600ms)
   useEffect(() => {
     if (!data.username) {
       setUsernameStatus('idle');
@@ -66,7 +66,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     return () => clearTimeout(timer);
   }, [data.username, db]);
 
-  // Debounced Referral Code Check
+  // Debounced Referral Code Check (600ms)
   useEffect(() => {
     if (!data.referralCode) {
       setReferralStatus('idle');
@@ -116,7 +116,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="mb-32">
         <span className="text-[12px] font-body font-medium text-ivory-40 uppercase tracking-widest">Step 1 of 4</span>
-        <h2 className="font-headline font-bold text-ivory text-22 mt-4">Let&apos;s get to know you</h2>
+        <h2 className="font-headline font-bold text-ivory text-22 mt-4">Let's get to know you</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-16">

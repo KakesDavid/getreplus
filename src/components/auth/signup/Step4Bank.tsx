@@ -26,7 +26,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     if (data.bankVerificationPersisted && !data.bankVerified) {
       onUpdate({ ...data.bankVerificationPersisted });
     }
-  }, []);
+  }, [data.bankVerificationPersisted, data.bankVerified, onUpdate]);
 
   const verifyAccount = useCallback(async (account: string, bank: string) => {
     setIsVerifying(true);
@@ -63,11 +63,10 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     setIsFinishing(true);
     setError(null);
 
+    // 30s timeout implementation
     const timeoutId = setTimeout(() => {
-      if (isFinishing) {
-        setIsFinishing(false);
-        setError("Update took too long. Please check your network and try again.");
-      }
+      setIsFinishing(false);
+      setError("Update took too long. Please check your network and try again.");
     }, 30000);
 
     try {
@@ -75,7 +74,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
 
       await updateUserBankAccount(db, data.firebaseUserUid, {
         bankName: data.selectedBank,
-        bankCode: "000", // Actual code would be from bank list in production
+        bankCode: "000", 
         accountNumber: data.accountNumber,
         accountName: data.verifiedAccountName
       });

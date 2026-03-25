@@ -26,7 +26,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
-  // Debounced Email Check
+  // Debounced Email Check (600ms)
   useEffect(() => {
     if (!data.email || !validateEmail(data.email)) {
       setEmailStatus('idle');
@@ -79,10 +79,8 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
 
     // 30s timeout implementation
     const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        setIsLoading(false);
-        setFirebaseError("Creation took too long. Please check your network and try again.");
-      }
+      setIsLoading(false);
+      setFirebaseError("Creation took too long. Please check your network and try again.");
     }, 30000);
 
     try {
@@ -93,7 +91,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
         username: data.username,
         phone: data.phone,
         referralCode: data.referralCode || undefined,
-        signupIp: null, // Should ideally be fetched from a server-side IP service
+        signupIp: null, 
         deviceFingerprint: null
       });
 
@@ -140,7 +138,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           value={data.email}
           onChange={(e) => onUpdate({ email: e.target.value })}
           validationState={emailStatus}
-          errorMessage={emailError as string} // We casting but AuthInput supports string only, would be better to update AuthInput to support ReactNode
+          errorMessage={emailError}
         />
 
         <div className="space-y-8">
