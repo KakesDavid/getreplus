@@ -14,10 +14,6 @@ export function MobileBrandHeader() {
           <span className="block text-[8px] text-gold uppercase tracking-widest font-medium">Get Reward Plus</span>
         </div>
       </Link>
-
-      <div className="bg-gold-subtle border border-gold-border rounded-full px-12 py-6 flex items-center gap-6">
-        <span className="text-[11px] font-subheadline font-semibold text-gold tracking-wide">Earn every Friday 🔥</span>
-      </div>
     </header>
   );
 }
