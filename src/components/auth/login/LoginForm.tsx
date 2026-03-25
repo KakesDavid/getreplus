@@ -9,6 +9,7 @@ import { validateEmail } from '@/utils/validators';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInUser } from '@/firebase/auth-service';
 import { useRouter } from 'next/navigation';
+import { getFirebaseErrorMessage } from '@/utils/firebase-errors';
 
 interface LoginFormProps {
   onForgotPassword: () => void;
@@ -38,12 +39,7 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
       router.push('/dashboard');
     } catch (err: any) {
       setIsLoading(false);
-      const msgMap: any = {
-        email_not_verified: "Your email is not verified. Please check your inbox for the verification link.",
-        invalid_credentials: "The credentials you entered do not match our records. Please check and try again.",
-        too_many_attempts: "Too many failed attempts. Your account is temporarily locked. Please try again later."
-      };
-      setError(msgMap[err.message] || "An unexpected error occurred. Please try again.");
+      setError(getFirebaseErrorMessage(err));
     }
   };
 

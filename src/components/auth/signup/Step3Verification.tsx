@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Loader2, ArrowLeft, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
-import { useAuth } from '@/firebase';
-import { sendEmailVerification, deleteUser, signOut } from 'firebase/auth';
+import { useAuth, useFirestore } from '@/firebase';
+import { deleteUnverifiedUser, sendVerification } from '@/firebase/auth-service';
 import { useEmailVerificationPolling } from '@/hooks/useEmailVerificationPolling';
 import { cn } from '@/lib/utils';
 
@@ -17,17 +17,16 @@ interface StepProps {
 
 export function Step3Verification({ data, onNext, onPrev, onUpdate }: StepProps) {
   const auth = useAuth();
+  const db = useFirestore();
   const [cooldown, setCooldown] = useState(0);
   const [isResending, setIsResending] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const onVerified = () => {
-    setIsVerifying(false);
     setShowSuccess(true);
     setTimeout(() => {
       onNext();
-    }, 1200);
+    }, 800);
   };
 
   useEmailVerificationPolling(auth.currentUser, onVerified);
@@ -41,10 +40,10 @@ export function Step3Verification({ data, onNext, onPrev, onUpdate }: StepProps)
   }, [cooldown]);
 
   const handleResend = async () => {
-    if (cooldown > 0 || !auth.currentUser) return;
+    if (cooldown > 0 || !auth.currentUser || data.resendCount >= 3) return;
     setIsResending(true);
     try {
-      await sendEmailVerification(auth.currentUser);
+      await sendVerification(auth.currentUser);
       setCooldown(45);
       onUpdate({ resendCount: data.resendCount + 1 });
     } catch (error) {
@@ -57,8 +56,8 @@ export function Step3Verification({ data, onNext, onPrev, onUpdate }: StepProps)
   const handleChangeEmail = async () => {
     if (!auth.currentUser) return;
     try {
-      // Clear up the unverified user if needed or just sign out
-      await signOut(auth);
+      await deleteUnverifiedUser(auth, db, auth.currentUser);
+      onUpdate({ email: '', password: '', confirmPassword: '' });
       onPrev();
     } catch (error) {
       console.error(error);
@@ -121,6 +120,12 @@ export function Step3Verification({ data, onNext, onPrev, onUpdate }: StepProps)
               <p className="text-12 text-emerald font-medium leading-tight">
                 Still no email? Reach out to us on WhatsApp for manual verification support.
               </p>
+              <a 
+                href="https://wa.me/2340000000000" 
+                className="inline-block mt-8 text-12 font-bold text-emerald underline"
+              >
+                Chat on WhatsApp
+              </a>
             </div>
           ) : (
             <button

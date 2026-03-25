@@ -22,13 +22,15 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   const db = useFirestore();
   const auth = useAuth();
   const [emailStatus, setEmailStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<React.ReactNode | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
+  // Debounced Email Check
   useEffect(() => {
     if (!data.email || !validateEmail(data.email)) {
       setEmailStatus('idle');
+      setEmailError(null);
       return;
     }
 
@@ -41,7 +43,12 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           setEmailError(null);
         } else {
           setEmailStatus('invalid');
-          setEmailError('Email already registered.');
+          setEmailError(
+            <span>
+              This email is already registered.{' '}
+              <Link href="/login" className="text-gold underline font-medium">Sign in instead?</Link>
+            </span>
+          );
         }
       } catch (e) {
         setEmailStatus('idle');
@@ -70,6 +77,14 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     setIsLoading(true);
     setFirebaseError(null);
 
+    // 30s timeout implementation
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        setIsLoading(false);
+        setFirebaseError("Creation took too long. Please check your network and try again.");
+      }
+    }, 30000);
+
     try {
       const result = await completeUserCreation(auth, db, {
         email: data.email,
@@ -78,9 +93,11 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
         username: data.username,
         phone: data.phone,
         referralCode: data.referralCode || undefined,
-        signupIp: null, // Placeholder
-        deviceFingerprint: null // Placeholder
+        signupIp: null, // Should ideally be fetched from a server-side IP service
+        deviceFingerprint: null
       });
+
+      clearTimeout(timeoutId);
 
       if (auth.currentUser) {
         await sendVerification(auth.currentUser);
@@ -89,9 +106,10 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
       onUpdate({ firebaseUserUid: result.uid });
       onNext();
     } catch (error: any) {
+      clearTimeout(timeoutId);
       const msgMap: any = {
         email_taken: "Email already in use.",
-        username_taken: "Username already taken.",
+        username_taken: "Username taken. Please choose another.",
         invalid_referral: "The referral code is no longer valid."
       };
       setFirebaseError(msgMap[error.message] || "An unexpected error occurred. Please try again.");
@@ -122,7 +140,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           value={data.email}
           onChange={(e) => onUpdate({ email: e.target.value })}
           validationState={emailStatus}
-          errorMessage={emailError}
+          errorMessage={emailError as string} // We casting but AuthInput supports string only, would be better to update AuthInput to support ReactNode
         />
 
         <div className="space-y-8">

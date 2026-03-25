@@ -6,6 +6,7 @@ import { GoldButton } from '../shared/GoldButton';
 import { validateEmail } from '@/utils/validators';
 import { useAuth } from '@/firebase';
 import { resetPassword } from '@/firebase/auth-service';
+import { cn } from '@/lib/utils';
 
 interface ForgotPasswordPanelProps {
   onBack: () => void;
@@ -14,6 +15,7 @@ interface ForgotPasswordPanelProps {
 export function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps) {
   const auth = useAuth();
   const [formState, setFormState] = useState<'form' | 'success'>('form');
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,18 +28,28 @@ export function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps) {
     setError(null);
     
     try {
+      // Always "succeeds" to prevent email enumeration
       await resetPassword(auth, email);
-      setIsLoading(false);
-      setFormState('success');
+      
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setFormState('success');
+        setIsTransitioning(false);
+      }, 150); // Matches exit duration
     } catch (err: any) {
       setIsLoading(false);
       setError("An error occurred while sending the reset link. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   if (formState === 'success') {
     return (
-      <div className="w-full max-w-[440px] flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-300">
+      <div className={cn(
+        "w-full max-w-[440px] flex flex-col items-center text-center transition-all duration-200",
+        isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
+      )}>
         <div className="w-[72px] h-[72px] bg-gold-subtle rounded-full flex items-center justify-center mb-24 animate-bounce-gentle">
           <CheckCircle2 className="text-gold" size={40} />
         </div>
@@ -61,7 +73,10 @@ export function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps) {
   }
 
   return (
-    <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-right-4 duration-300">
+    <div className={cn(
+      "w-full max-w-[440px] transition-all duration-150",
+      isTransitioning ? "opacity-0 -translate-x-4" : "opacity-100 translate-x-0"
+    )}>
       <button
         onClick={onBack}
         className="w-44 h-44 flex items-center justify-center text-ivory-60 hover:text-ivory mb-20 -ml-12 transition-colors"

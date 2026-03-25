@@ -1,13 +1,14 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Tag, ChevronRight } from 'lucide-react';
+import { User, Tag, ChevronRight, Loader2 } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
-import { validateFullName, validatePhone } from '@/utils/validators';
+import { validateFullName, validatePhone, validateUsername } from '@/utils/validators';
 import { useFirestore } from '@/firebase';
 import { checkUsernameAvailability, validateReferralCode } from '@/firebase/auth-service';
+import { useSearchParams } from 'next/navigation';
 
 interface StepProps {
   data: SignupData;
@@ -17,16 +18,32 @@ interface StepProps {
 
 export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
   const db = useFirestore();
+  const searchParams = useSearchParams();
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [referralStatus, setReferralStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
   const [referralInfo, setReferralInfo] = useState<string | null>(null);
   const [referralError, setReferralError] = useState<string | null>(null);
 
+  // Check for URL ref parameter on mount
   useEffect(() => {
-    if (!data.username || data.username.length < 3) {
+    const ref = searchParams.get('ref');
+    if (ref && !data.referralCode) {
+      onUpdate({ referralCode: ref.toUpperCase() });
+    }
+  }, []);
+
+  // Debounced Username Check
+  useEffect(() => {
+    if (!data.username) {
       setUsernameStatus('idle');
       setUsernameError(null);
+      return;
+    }
+
+    if (!validateUsername(data.username)) {
+      setUsernameStatus('invalid');
+      setUsernameError("3-20 chars, lowercase, numbers, underscores only.");
       return;
     }
 
@@ -39,7 +56,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
           setUsernameError(null);
         } else {
           setUsernameStatus('invalid');
-          setUsernameError(result.reason === "taken" ? "Username taken." : "3–20 characters. Alphanumeric only.");
+          setUsernameError(result.reason === "taken" ? "Username taken. Please choose another." : "Invalid format.");
         }
       } catch (e) {
         setUsernameStatus('idle');
@@ -49,6 +66,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     return () => clearTimeout(timer);
   }, [data.username, db]);
 
+  // Debounced Referral Code Check
   useEffect(() => {
     if (!data.referralCode) {
       setReferralStatus('idle');
@@ -68,9 +86,9 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
         } else {
           setReferralStatus('invalid');
           const errorMap: any = {
-            invalid_format: "Invalid format (GETR-XXXXXXXX)",
-            not_found: "Code not found",
-            inactive_referrer: "Referrer is not active"
+            invalid_format: "Format: GETR-XXXXXXXX",
+            not_found: "Referral code not found.",
+            inactive_referrer: "This referrer is not currently active."
           };
           setReferralError(errorMap[result.reason!] || "Invalid referral code.");
           setReferralInfo(null);
@@ -121,6 +139,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
           onChange={(e) => onUpdate({ username: e.target.value.toLowerCase() })}
           validationState={usernameStatus}
           errorMessage={usernameError}
+          helperText={usernameStatus === 'loading' ? 'Checking availability...' : (usernameStatus === 'valid' ? '✓ Username available' : undefined)}
           required
         />
 

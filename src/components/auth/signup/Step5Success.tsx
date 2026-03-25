@@ -12,8 +12,17 @@ interface StepProps {
 
 export function Step5Success({ data }: StepProps) {
   useEffect(() => {
-    // Simulated background onboarding email
-    console.log(`[EmailJS] Sending onboarding email to ${data.email}...`);
+    // Simulated EmailJS welcome email side effect
+    const sendWelcomeEmail = async () => {
+      try {
+        console.log(`[EmailJS] Sending welcome email to ${data.email}...`);
+        // Mock call: await emailjs.send(...)
+      } catch (err) {
+        console.warn('Welcome email failed to send, but user creation was successful.');
+      }
+    };
+    
+    sendWelcomeEmail();
   }, [data.email]);
 
   return (

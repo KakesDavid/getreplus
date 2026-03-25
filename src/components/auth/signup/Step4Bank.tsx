@@ -19,19 +19,30 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
   const db = useFirestore();
   const [isVerifying, setIsVerifying] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Restore verification state if user navigated away and back
+  useEffect(() => {
+    if (data.bankVerificationPersisted && !data.bankVerified) {
+      onUpdate({ ...data.bankVerificationPersisted });
+    }
+  }, []);
 
   const verifyAccount = useCallback(async (account: string, bank: string) => {
     setIsVerifying(true);
+    setError(null);
     // Mock delay for Paystack simulation
     setTimeout(() => {
       const mockVerifiedName = data.fullName.toUpperCase();
       const nameMatch = true;
 
-      onUpdate({
+      const verificationResult = {
         bankVerified: true,
         verifiedAccountName: mockVerifiedName,
         nameMatchPassed: nameMatch
-      });
+      };
+
+      onUpdate(verificationResult);
       setIsVerifying(false);
     }, 1500);
   }, [data.fullName, onUpdate]);
@@ -50,20 +61,31 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     if (!data.bankVerified || !data.nameMatchPassed || isFinishing) return;
     
     setIsFinishing(true);
+    setError(null);
+
+    const timeoutId = setTimeout(() => {
+      if (isFinishing) {
+        setIsFinishing(false);
+        setError("Update took too long. Please check your network and try again.");
+      }
+    }, 30000);
 
     try {
       if (!data.firebaseUserUid) throw new Error('Auth state missing');
 
       await updateUserBankAccount(db, data.firebaseUserUid, {
         bankName: data.selectedBank,
-        bankCode: "000", // Actual code would be from selector in production
+        bankCode: "000", // Actual code would be from bank list in production
         accountNumber: data.accountNumber,
         accountName: data.verifiedAccountName
       });
 
+      clearTimeout(timeoutId);
       onNext();
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.error(err);
+      setError("Failed to save bank details. Please try again.");
       setIsFinishing(false);
     }
   };
@@ -153,6 +175,12 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-error-subtle border border-error-border rounded-lg p-12 text-error text-[13px] animate-in slide-in-from-top-2">
+            {error}
           </div>
         )}
 
