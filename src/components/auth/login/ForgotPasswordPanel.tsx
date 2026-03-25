@@ -4,26 +4,35 @@ import { ChevronLeft, Mail as MailIcon, CheckCircle2 } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { validateEmail } from '@/utils/validators';
+import { useAuth } from '@/firebase';
+import { resetPassword } from '@/firebase/auth-service';
 
 interface ForgotPasswordPanelProps {
   onBack: () => void;
 }
 
 export function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps) {
+  const auth = useAuth();
   const [formState, setFormState] = useState<'form' | 'success'>('form');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) return;
 
     setIsLoading(true);
-    // Firebase logic will go here
-    setTimeout(() => {
+    setError(null);
+    
+    try {
+      await resetPassword(auth, email);
       setIsLoading(false);
       setFormState('success');
-    }, 800);
+    } catch (err: any) {
+      setIsLoading(false);
+      setError("An error occurred while sending the reset link. Please try again.");
+    }
   };
 
   if (formState === 'success') {
@@ -35,7 +44,7 @@ export function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps) {
         
         <h2 className="font-headline font-bold text-ivory text-[24px] lg:text-[28px] mb-12">Reset link sent</h2>
         <p className="text-ivory-55 text-base leading-relaxed mb-32">
-          We sent a password reset link to <span className="text-gold font-medium">{email}</span>. Please check your inbox and spam folder.
+          If an account exists for <span className="text-gold font-medium">{email}</span>, you will receive a password reset link shortly.
         </p>
 
         <div className="w-full space-y-16">
@@ -75,6 +84,7 @@ export function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          errorMessage={error}
         />
 
         <GoldButton type="submit" isLoading={isLoading}>

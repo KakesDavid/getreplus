@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -6,9 +5,9 @@ import { User, Tag, ChevronRight } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
-import { validateFullName, validateUsername, validatePhone } from '@/utils/validators';
-import { doc, getDoc } from 'firebase/firestore';
+import { validateFullName, validatePhone } from '@/utils/validators';
 import { useFirestore } from '@/firebase';
+import { checkUsernameAvailability, validateReferralCode } from '@/firebase/auth-service';
 
 interface StepProps {
   data: SignupData;
@@ -31,23 +30,16 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
       return;
     }
 
-    if (!validateUsername(data.username)) {
-      setUsernameStatus('invalid');
-      setUsernameError('3–20 characters. Alphanumeric only.');
-      return;
-    }
-
     const timer = setTimeout(async () => {
       setUsernameStatus('loading');
       try {
-        const docRef = doc(db, 'usernames', data.username.toLowerCase());
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
+        const result = await checkUsernameAvailability(db, data.username);
+        if (result.available) {
           setUsernameStatus('valid');
           setUsernameError(null);
         } else {
           setUsernameStatus('invalid');
-          setUsernameError('Username taken.');
+          setUsernameError(result.reason === "taken" ? "Username taken." : "3–20 characters. Alphanumeric only.");
         }
       } catch (e) {
         setUsernameStatus('idle');
@@ -68,28 +60,19 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     const timer = setTimeout(async () => {
       setReferralStatus('loading');
       try {
-        // First check the referralCode lookup
-        const codeRef = doc(db, 'referralCodes', data.referralCode.toUpperCase());
-        const codeSnap = await getDoc(codeRef);
-        
-        if (codeSnap.exists()) {
-          const referrerUid = codeSnap.data().uid;
-          // Verify if the user is active
-          const userRef = doc(db, 'users', referrerUid);
-          const userSnap = await getDoc(userRef);
-          
-          if (userSnap.exists()) {
-            const referrer = userSnap.data();
-            setReferralStatus('valid');
-            setReferralInfo(`Referred by ${referrer.fullName}`);
-            setReferralError(null);
-          } else {
-            setReferralStatus('invalid');
-            setReferralError('Referrer not found.');
-          }
+        const result = await validateReferralCode(db, data.referralCode);
+        if (result.valid) {
+          setReferralStatus('valid');
+          setReferralInfo(`Referred by ${result.referrerFullName}`);
+          setReferralError(null);
         } else {
           setReferralStatus('invalid');
-          setReferralError('Invalid referral code.');
+          const errorMap: any = {
+            invalid_format: "Invalid format (GETR-XXXXXXXX)",
+            not_found: "Code not found",
+            inactive_referrer: "Referrer is not active"
+          };
+          setReferralError(errorMap[result.reason!] || "Invalid referral code.");
           setReferralInfo(null);
         }
       } catch (e) {
@@ -145,7 +128,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
           label="Phone Number"
           type="tel"
           placeholder="801 234 5678"
-          leftPaddingClassName="pl-[92px]"
+          leftPaddingClassName="pl-[92px] lg:pl-[104px]"
           leftIcon={
             <div className="flex items-center gap-4">
               <span className="text-16">🇳🇬</span>

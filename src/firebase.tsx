@@ -1,2 +1,7 @@
-// This file is deprecated. Please use the modular SDKs in src/firebase/ instead.
-export {};
+'use client';
+
+/**
+ * Redirects to the modular Firebase directory.
+ * This satisfies imports from '@/firebase' when src/firebase.tsx takes precedence over the directory.
+ */
+export * from './firebase/index';

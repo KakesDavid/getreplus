@@ -6,12 +6,18 @@ import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { LoginErrorBlock } from './LoginErrorBlock';
 import { validateEmail } from '@/utils/validators';
+import { useAuth, useFirestore } from '@/firebase';
+import { signInUser } from '@/firebase/auth-service';
+import { useRouter } from 'next/navigation';
 
 interface LoginFormProps {
   onForgotPassword: () => void;
 }
 
 export function LoginForm({ onForgotPassword }: LoginFormProps) {
+  const router = useRouter();
+  const auth = useAuth();
+  const db = useFirestore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,10 +33,18 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
     setIsLoading(true);
     setError(null);
     
-    setTimeout(() => {
+    try {
+      await signInUser(auth, db, email, password);
+      router.push('/dashboard');
+    } catch (err: any) {
       setIsLoading(false);
-      setError('The credentials you entered do not match our records. Please check and try again.');
-    }, 1500);
+      const msgMap: any = {
+        email_not_verified: "Your email is not verified. Please check your inbox for the verification link.",
+        invalid_credentials: "The credentials you entered do not match our records. Please check and try again.",
+        too_many_attempts: "Too many failed attempts. Your account is temporarily locked. Please try again later."
+      };
+      setError(msgMap[err.message] || "An unexpected error occurred. Please try again.");
+    }
   };
 
   return (

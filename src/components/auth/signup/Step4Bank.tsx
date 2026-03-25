@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -6,8 +5,8 @@ import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { BankSelector } from './BankSelector';
 import { SignupData } from '@/hooks/useSignupState';
-import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { updateUserBankAccount } from '@/firebase/auth-service';
 
 interface StepProps {
   data: SignupData;
@@ -47,67 +46,21 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     }
   }, [data.accountNumber, data.selectedBank, data.bankVerified, verifyAccount, onUpdate]);
 
-  const generateReferralCode = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 8; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return `GETR-${code}`;
-  };
-
   const handleFinish = async () => {
     if (!data.bankVerified || !data.nameMatchPassed || isFinishing) return;
     
     setIsFinishing(true);
-    const refCode = generateReferralCode();
 
     try {
       if (!data.firebaseUserUid) throw new Error('Auth state missing');
 
-      const batch = writeBatch(db);
-
-      // 1. Create main user document
-      const userRef = doc(db, 'users', data.firebaseUserUid);
-      batch.set(userRef, {
-        uid: data.firebaseUserUid,
-        fullName: data.fullName,
-        username: data.username.toLowerCase(),
-        phone: data.phone,
-        email: data.email.toLowerCase(),
-        referralCode: refCode,
-        referredBy: data.referralCode || null,
-        bankAccount: {
-          bankName: data.selectedBank,
-          bankCode: "000", // Would be actual code in production
-          accountNumber: data.accountNumber,
-          accountName: data.verifiedAccountName,
-          verifiedAt: new Date().toISOString()
-        },
-        accountStatus: 'pending',
-        isActive: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp(),
-        signupIp: null, // Would capture server-side or via API
-        deviceFingerprint: null
+      await updateUserBankAccount(db, data.firebaseUserUid, {
+        bankName: data.selectedBank,
+        bankCode: "000", // Actual code would be from selector in production
+        accountNumber: data.accountNumber,
+        accountName: data.verifiedAccountName
       });
 
-      // 2. Create username lookup
-      const usernameRef = doc(db, 'usernames', data.username.toLowerCase());
-      batch.set(usernameRef, {
-        uid: data.firebaseUserUid,
-        createdAt: serverTimestamp()
-      });
-
-      // 3. Create referral code lookup
-      const refCodeRef = doc(db, 'referralCodes', refCode);
-      batch.set(refCodeRef, {
-        uid: data.firebaseUserUid,
-        createdAt: serverTimestamp()
-      });
-
-      await batch.commit();
       onNext();
     } catch (error) {
       console.error(error);

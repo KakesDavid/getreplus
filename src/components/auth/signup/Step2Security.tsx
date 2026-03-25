@@ -6,11 +6,9 @@ import { GoldButton } from '../shared/GoldButton';
 import { PasswordStrengthMeter } from '../shared/PasswordStrengthMeter';
 import { SignupData } from '@/hooks/useSignupState';
 import { validateEmail, validatePassword } from '@/utils/validators';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { useFirestore, useAuth } from '@/firebase';
+import { checkEmailAvailability, completeUserCreation, sendVerification } from '@/firebase/auth-service';
 import { cn } from '@/lib/utils';
-import { getAuthErrorMessage } from '@/utils/firebaseErrors';
 import Link from 'next/link';
 
 interface StepProps {
@@ -28,7 +26,6 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
-  // Email Duplicate Check
   useEffect(() => {
     if (!data.email || !validateEmail(data.email)) {
       setEmailStatus('idle');
@@ -38,10 +35,8 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     const timer = setTimeout(async () => {
       setEmailStatus('loading');
       try {
-        // Querying the 'users' collection as per backend.json
-        const q = query(collection(db, 'users'), where('email', '==', data.email.toLowerCase()), limit(1));
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
+        const result = await checkEmailAvailability(db, data.email);
+        if (result.available) {
           setEmailStatus('valid');
           setEmailError(null);
         } else {
@@ -76,12 +71,30 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     setFirebaseError(null);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password!);
-      await sendEmailVerification(userCredential.user);
-      onUpdate({ firebaseUserUid: userCredential.user.uid });
+      const result = await completeUserCreation(auth, db, {
+        email: data.email,
+        password: data.password!,
+        fullName: data.fullName,
+        username: data.username,
+        phone: data.phone,
+        referralCode: data.referralCode || undefined,
+        signupIp: null, // Placeholder
+        deviceFingerprint: null // Placeholder
+      });
+
+      if (auth.currentUser) {
+        await sendVerification(auth.currentUser);
+      }
+      
+      onUpdate({ firebaseUserUid: result.uid });
       onNext();
     } catch (error: any) {
-      setFirebaseError(getAuthErrorMessage(error.code));
+      const msgMap: any = {
+        email_taken: "Email already in use.",
+        username_taken: "Username already taken.",
+        invalid_referral: "The referral code is no longer valid."
+      };
+      setFirebaseError(msgMap[error.message] || "An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }
   };
@@ -147,7 +160,6 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           errorMessage={data.confirmPassword && !passwordsMatch ? "Passwords don't match" : null}
         />
 
-        {/* Terms Checkbox */}
         <label className="flex items-start gap-12 py-12 cursor-pointer group">
           <div className="relative pt-2">
             <input
