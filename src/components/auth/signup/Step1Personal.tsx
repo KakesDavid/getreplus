@@ -25,7 +25,6 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
   const [referralInfo, setReferralInfo] = useState<string | null>(null);
   const [referralError, setReferralError] = useState<string | null>(null);
 
-  // Check for URL ref parameter on mount
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref && !data.referralCode) {
@@ -33,7 +32,6 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     }
   }, [searchParams, data.referralCode, onUpdate]);
 
-  // Debounced Username Check (600ms)
   useEffect(() => {
     if (!data.username) {
       setUsernameStatus('idle');
@@ -66,7 +64,6 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     return () => clearTimeout(timer);
   }, [data.username, db]);
 
-  // Debounced Referral Code Check (600ms)
   useEffect(() => {
     if (!data.referralCode) {
       setReferralStatus('idle');
@@ -101,16 +98,16 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
     return () => clearTimeout(timer);
   }, [data.referralCode, db]);
 
-  const isValid = 
-    validateFullName(data.fullName) && 
-    usernameStatus === 'valid' && 
-    validatePhone(data.phone) &&
-    (data.referralCode === '' || referralStatus === 'valid');
+  const isPhoneValid = validatePhone(data.phone);
+  const isNameValid = validateFullName(data.fullName);
+  const isUsernameValid = usernameStatus === 'valid';
+  const isReferralValid = data.referralCode === '' || referralStatus === 'valid';
+
+  const isValid = isNameValid && isUsernameValid && isPhoneValid && isReferralValid;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isValid) {
-      // Normalize phone number before moving to next step
       onUpdate({ phone: normalizePhone(data.phone) });
       onNext();
     }
@@ -118,7 +115,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="mb-32">
+      <div className="mb-24">
         <span className="text-[12px] font-body font-medium text-ivory-40 uppercase tracking-widest">Step 1 of 4</span>
         <h2 className="font-headline font-bold text-ivory text-22 mt-4">Let's get to know you</h2>
       </div>
@@ -131,7 +128,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
           value={data.fullName}
           onChange={(e) => onUpdate({ fullName: e.target.value })}
           helperText="Should match your bank account name."
-          validationState={data.fullName ? (validateFullName(data.fullName) ? 'valid' : 'invalid') : 'idle'}
+          validationState={data.fullName ? (isNameValid ? 'valid' : 'invalid') : 'idle'}
           required
         />
 
@@ -164,7 +161,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
             const val = e.target.value.replace(/\D/g, '').slice(0, 11);
             onUpdate({ phone: val });
           }}
-          validationState={data.phone.length >= 10 ? (validatePhone(data.phone) ? 'valid' : 'invalid') : 'idle'}
+          validationState={data.phone.length >= 10 ? (isPhoneValid ? 'valid' : 'invalid') : 'idle'}
           helperText="Enter your mobile number (e.g., 080... or 80...)"
           required
         />

@@ -21,17 +21,20 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isFinishing, setIsFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Restore verification state if user navigated away and back
   useEffect(() => {
     if (data.bankVerificationPersisted && !data.bankVerified) {
-      onUpdate({ ...data.bankVerificationPersisted });
+      onUpdate({ 
+        bankVerified: data.bankVerificationPersisted.bankVerified,
+        verifiedAccountName: data.bankVerificationPersisted.verifiedAccountName,
+        nameMatchPassed: data.bankVerificationPersisted.nameMatchPassed
+      });
     }
   }, [data.bankVerificationPersisted, data.bankVerified, onUpdate]);
 
   const verifyAccount = useCallback(async (account: string, bank: string) => {
     setIsVerifying(true);
     setError(null);
-    // Mock delay for Paystack simulation
+    
     setTimeout(() => {
       const mockVerifiedName = data.fullName.toUpperCase();
       const nameMatch = true;
@@ -42,7 +45,10 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         nameMatchPassed: nameMatch
       };
 
-      onUpdate(verificationResult);
+      onUpdate({
+        ...verificationResult,
+        bankVerificationPersisted: verificationResult
+      });
       setIsVerifying(false);
     }, 1500);
   }, [data.fullName, onUpdate]);
@@ -63,7 +69,6 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     setIsFinishing(true);
     setError(null);
 
-    // 30s timeout implementation
     const timeoutId = setTimeout(() => {
       setIsFinishing(false);
       setError("Update took too long. Please check your network and try again.");
@@ -167,7 +172,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
                   <span className="text-13 font-bold">Account Name Mismatch</span>
                 </div>
                 <p className="text-12 text-error/80 leading-relaxed">
-                  The name on this bank account doesn't match the Full Name you provided in Step 1. Weekly payouts will be rejected if names don't match.
+                  The name on this bank account doesn't match the Full Name you provided in Step 1.
                 </p>
                 <div className="flex gap-12 pt-4">
                   <button onClick={onPrev} className="text-12 font-bold text-error underline">Try Another Account</button>
@@ -189,7 +194,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
             isLoading={isFinishing}
             isDisabled={!data.bankVerified || !data.nameMatchPassed}
           >
-            Create My Account
+            Finish Account Setup
           </GoldButton>
         </div>
       </div>

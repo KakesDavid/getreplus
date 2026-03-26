@@ -26,7 +26,6 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
-  // Debounced Email Check (500ms)
   useEffect(() => {
     if (!data.email) {
       setEmailStatus('idle');
@@ -34,7 +33,8 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
       return;
     }
 
-    if (!validateEmail(data.email)) {
+    const isFormatValid = validateEmail(data.email);
+    if (!isFormatValid) {
       setEmailStatus('invalid');
       setEmailError("Please enter a valid email address.");
       return;
@@ -65,20 +65,19 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     return () => clearTimeout(timer);
   }, [data.email, db]);
 
-  // Password Validation
   const pDetails = validatePassword(data.password || '');
   const isMinLength = (data.password?.length || 0) >= 8;
   const hasComplexity = [pDetails.hasNumber, pDetails.hasUpper, pDetails.hasSpecial].filter(Boolean).length >= 1;
-  const isStrongEnough = isMinLength && hasComplexity;
+  const isStrongEnough = isMinLength && (data.password?.length || 0) > 0;
   
   const passwordsMatch = data.password === data.confirmPassword && (data.confirmPassword?.length || 0) > 0;
 
-  // Final Validation for Button
   const canSubmit = 
     emailStatus === 'valid' && 
     isStrongEnough && 
     passwordsMatch && 
-    data.termsAccepted;
+    data.termsAccepted &&
+    !isLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,8 +125,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-      {/* Header Area */}
-      <div className="flex items-center justify-between mb-24">
+      <div className="flex items-center justify-between mb-20">
         <button
           onClick={onPrev}
           className="w-40 h-40 flex items-center justify-center text-ivory-40 hover:text-gold transition-colors -ml-12"
@@ -136,19 +134,18 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
         >
           <ChevronLeft size={24} />
         </button>
-        <div className="flex items-center gap-8 bg-white/5 border border-gold/20 px-12 py-6 rounded-full">
+        <div className="flex items-center gap-8 bg-white/5 border border-gold/20 px-12 py-4 rounded-full">
            <ShieldCheck size={14} className="text-gold" />
            <span className="text-[11px] font-bold text-gold uppercase tracking-widest">Security Step</span>
         </div>
       </div>
 
-      <div className="mb-24">
-        <h2 className="font-headline font-bold text-ivory text-24 lg:text-28 leading-tight">Security & Access</h2>
-        <p className="text-ivory-50 text-14 mt-4">Create your login credentials safely.</p>
+      <div className="mb-20">
+        <h2 className="font-headline font-bold text-ivory text-24 lg:text-26 leading-tight">Security & Access</h2>
+        <p className="text-ivory-50 text-13 mt-4">Create your login credentials safely.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-20">
-        {/* Email Field */}
+      <form onSubmit={handleSubmit} className="space-y-16">
         <AuthInput
           label="Email Address"
           type="email"
@@ -162,8 +159,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           required
         />
 
-        {/* Password Group */}
-        <div className="bg-white/5 border border-white-15 rounded-2xl p-20 space-y-20">
+        <div className="bg-white/5 border border-white-15 rounded-2xl p-16 space-y-16">
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <label className="text-[12px] font-bold text-ivory-40 uppercase tracking-wider">
@@ -172,7 +168,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
               <div className="group relative">
                 <Info size={16} className="text-ivory-25 cursor-help hover:text-gold transition-colors" />
                 <div className="absolute bottom-full right-0 mb-8 w-[220px] p-12 bg-obsidian border border-gold-border rounded-xl text-[11px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
-                  Min. 8 characters with at least one number or special character.
+                  Min. 8 characters. For best security, use numbers or symbols.
                 </div>
               </div>
             </div>
@@ -208,8 +204,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           </div>
         </div>
 
-        {/* Terms Checkbox */}
-        <div className="py-8">
+        <div className="py-4">
           <label className="flex items-start gap-12 cursor-pointer group select-none">
             <div className="relative mt-2">
               <input
@@ -231,8 +226,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           </label>
         </div>
 
-        {/* Action & Global Error */}
-        <div className="space-y-16 pt-8">
+        <div className="space-y-16 pt-4">
           {firebaseError && (
             <div className="bg-error-subtle border border-error-border rounded-xl p-12 flex items-start gap-10 text-error text-[13px] font-medium animate-in slide-in-from-top-2">
               <AlertCircle size={18} className="shrink-0 mt-1" />
@@ -246,7 +240,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
             isDisabled={!canSubmit}
             className="h-[56px] text-16"
           >
-            Create My Account
+            Create Secure Account
           </GoldButton>
         </div>
       </form>
