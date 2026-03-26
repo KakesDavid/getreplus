@@ -19,7 +19,6 @@ export function SignupShell() {
   // Handle Return from Email Verification or Refresh
   useEffect(() => {
     if (!isUserLoading && user) {
-      // If user is verified but hasn't finished the profile (Step 4 is Bank)
       if (user.emailVerified && step < 4) {
         jumpToStep(4);
         updateData({ 
@@ -32,7 +31,7 @@ export function SignupShell() {
 
   const renderStep = () => {
     if (!isHydrated) return (
-      <div className="min-h-[400px] flex flex-col items-center justify-center gap-12 text-ivory-30">
+      <div className="min-h-[300px] flex flex-col items-center justify-center gap-12 text-ivory-30">
         <div className="w-24 h-24 border-2 border-gold/20 border-t-gold rounded-full animate-spin" />
         <span className="text-sm font-medium">Restoring your progress...</span>
       </div>
@@ -55,23 +54,23 @@ export function SignupShell() {
   };
 
   return (
-    <div className="w-full max-w-[480px] animate-in fade-in duration-500 mx-auto mt-0 mb-16">
+    <div className="w-full max-w-[460px] animate-in fade-in duration-500 mx-auto mt-0">
       <div className="flex flex-col items-center mb-12">
-        <span className="font-subheadline font-medium text-gold text-[12px] mb-2 uppercase tracking-[0.2em]">Registration</span>
-        <h1 className="font-headline font-bold text-ivory text-[24px] lg:text-[28px]">Join GetrePlus</h1>
+        <span className="font-subheadline font-medium text-gold text-[11px] mb-2 uppercase tracking-[0.2em]">Registration</span>
+        <h1 className="font-headline font-bold text-ivory text-[24px] lg:text-[26px]">Join GetrePlus</h1>
       </div>
 
-      <div className="px-12 mb-16">
+      <div className="px-16 mb-12">
         <ProgressBar step={step} total={5} />
         <StepDots currentStep={step} totalSteps={5} />
       </div>
 
-      <div className="bg-surface border border-gold/15 rounded-[24px] p-20 sm:p-24 lg:p-32 shadow-card-shadow relative min-h-[440px] overflow-hidden group">
+      <div className="bg-surface border border-gold/15 rounded-[24px] p-16 sm:p-20 lg:p-24 shadow-card-shadow relative min-h-[400px] overflow-hidden group">
         <div className="noise-overlay" />
         <div 
           className={cn(
             "w-full transition-all duration-300 ease-in-out relative z-10",
-            isTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100",
+            isTransitioning ? "opacity-0 scale-[0.99]" : "opacity-100 scale-100",
             isTransitioning && direction === 'forward' && "-translate-x-4",
             isTransitioning && direction === 'backward' && "translate-x-4"
           )}
@@ -79,6 +78,9 @@ export function SignupShell() {
           {renderStep()}
         </div>
       </div>
+      
+      {/* Bottom spacer removal as requested */}
+      <div className="h-16" />
     </div>
   );
 }
