@@ -24,6 +24,7 @@ export interface SignupData {
   
   // Step 4 (Bank)
   selectedBank: string;
+  selectedBankCode?: string;
   accountNumber: string;
   verifiedAccountName: string;
   bankVerified: boolean;
