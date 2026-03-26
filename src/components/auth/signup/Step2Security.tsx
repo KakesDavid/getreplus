@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Mail, Lock, ChevronLeft, Check, Info, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -98,8 +97,8 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
         username: data.username,
         phone: data.phone,
         referralCode: data.referralCode || undefined,
-        signupIp: null, 
-        deviceFingerprint: null
+        signupIp: data.signupIp || null, 
+        deviceFingerprint: data.deviceFingerprint || null
       });
 
       if (auth.currentUser) {

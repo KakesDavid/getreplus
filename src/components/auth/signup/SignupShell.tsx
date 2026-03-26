@@ -10,17 +10,17 @@ import { ProgressBar } from './ProgressBar';
 import { StepDots } from './StepDots';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
+import { fetchIp, getDeviceFingerprint } from '@/utils/security';
 
 export function SignupShell() {
   const { user, isUserLoading } = useUser();
   const { step, formData, direction, isTransitioning, isHydrated, nextStep, prevStep, updateData, jumpToStep } = useSignupState();
 
-  // Handle Return from Email Verification or Refresh
+  // 1. Handle Return from Email Verification or Refresh
   useEffect(() => {
     if (!isUserLoading && user && user.emailVerified) {
       if (step < 4) {
         jumpToStep(4);
-        // Only update if data is actually different to avoid redundant renders
         if (formData.firebaseUserUid !== user.uid) {
           updateData({ 
             firebaseUserUid: user.uid, 
@@ -30,6 +30,22 @@ export function SignupShell() {
       }
     }
   }, [user, isUserLoading, step, jumpToStep, updateData, formData.email, formData.firebaseUserUid]);
+
+  // 2. Capture Security Identifiers (IP & Fingerprint) once on mount
+  useEffect(() => {
+    if (isHydrated && !formData.deviceFingerprint) {
+      // Generate fingerprint immediately
+      const fingerprint = getDeviceFingerprint();
+      
+      // Fetch IP in background
+      fetchIp().then(ip => {
+        updateData({ 
+          deviceFingerprint: fingerprint,
+          signupIp: ip 
+        });
+      });
+    }
+  }, [isHydrated, formData.deviceFingerprint, updateData]);
 
   const renderStep = () => {
     if (!isHydrated) return (

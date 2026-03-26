@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useCallback, useEffect } from 'react';
 
@@ -31,13 +30,13 @@ export interface SignupData {
   nameMatchPassed: boolean;
   bankVerificationPersisted: any;
   
-  // Meta
-  signupIp: string;
-  deviceFingerprint: string;
+  // Meta / Security
+  signupIp: string | null;
+  deviceFingerprint: string | null;
   firebaseUserUid?: string;
 }
 
-const STORAGE_KEY = 'getreplus_signup_state_v2';
+const STORAGE_KEY = 'getreplus_signup_state_v3';
 
 export function useSignupState() {
   const [step, setStep] = useState<SignupStep>(1);
@@ -63,8 +62,8 @@ export function useSignupState() {
     bankVerified: false,
     nameMatchPassed: false,
     bankVerificationPersisted: null,
-    signupIp: '',
-    deviceFingerprint: '',
+    signupIp: null,
+    deviceFingerprint: null,
   });
 
   // Load from localStorage on mount
