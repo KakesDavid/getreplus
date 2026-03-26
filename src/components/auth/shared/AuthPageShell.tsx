@@ -21,7 +21,7 @@ export function AuthPageShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Auth Content Area */}
-      <main className="flex-1 min-h-svh lg:h-svh overflow-y-auto px-16 sm:px-24 py-32 lg:py-0 flex items-center justify-center relative z-10">
+      <main className="flex-1 min-h-svh lg:h-svh overflow-y-auto px-16 sm:px-24 py-16 lg:py-0 flex items-center justify-center relative z-10">
         <div className="w-full">
           {children}
         </div>
