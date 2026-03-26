@@ -70,33 +70,53 @@ export async function checkEmailAvailability(db: Firestore, email: string) {
  * Validates a referral code format and existence.
  */
 export async function validateReferralCode(db: Firestore, code: string) {
+  console.log(`[ReferralCheck] Starting validation for: ${code}`);
+  
   const formatRegex = /^GETR-[A-Z0-9]{8}$/;
   if (!formatRegex.test(code.toUpperCase())) {
+    console.warn(`[ReferralCheck] Invalid format: ${code}`);
     return { valid: false, reason: "invalid_format" };
   }
 
-  const codeRef = doc(db, 'referralCodes', code.toUpperCase());
-  const codeSnap = await getDoc(codeRef);
+  try {
+    const codeRef = doc(db, 'referralCodes', code.toUpperCase());
+    const codeSnap = await getDoc(codeRef);
 
-  if (!codeSnap.exists()) {
-    return { valid: false, reason: "not_found" };
+    if (!codeSnap.exists()) {
+      console.warn(`[ReferralCheck] Code document not found: ${code}`);
+      return { valid: false, reason: "not_found" };
+    }
+
+    const referrerUid = codeSnap.data().uid;
+    console.log(`[ReferralCheck] Found UID: ${referrerUid}, fetching user...`);
+    
+    const userRef = doc(db, 'users', referrerUid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      console.error(`[ReferralCheck] User document missing for UID: ${referrerUid}`);
+      return { valid: false, reason: "not_found" };
+    }
+
+    const referrerData = userSnap.data();
+    console.log(`[ReferralCheck] Referrer: ${referrerData.fullName}, Status: ${referrerData.accountStatus}`);
+
+    // Allow validation even if pending for better UX, but usually only 'active' can refer. 
+    // Adjust based on your business logic. Here we strict-check 'active'.
+    if (referrerData.accountStatus !== "active") {
+      return { valid: false, reason: "inactive_referrer" };
+    }
+
+    return {
+      valid: true,
+      referrerUid,
+      referrerFullName: referrerData.fullName,
+      referrerUsername: referrerData.username
+    };
+  } catch (error) {
+    console.error("[ReferralCheck] Firestore error:", error);
+    throw error;
   }
-
-  const referrerUid = codeSnap.data().uid;
-  const userRef = doc(db, 'users', referrerUid);
-  const userSnap = await getDoc(userRef);
-
-  if (!userSnap.exists() || userSnap.data().accountStatus !== "active") {
-    return { valid: false, reason: "inactive_referrer" };
-  }
-
-  const referrerData = userSnap.data();
-  return {
-    valid: true,
-    referrerUid,
-    referrerFullName: referrerData.fullName,
-    referrerUsername: referrerData.username
-  };
 }
 
 /**
