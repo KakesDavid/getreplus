@@ -1,11 +1,11 @@
 
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { PartyPopper, ChevronRight, LayoutDashboard, Rocket } from 'lucide-react';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
-import emailjs from '@emailjs/browser';
+import { sendWelcomeEmail } from '@/utils/emailjs';
 import { cn } from '@/lib/utils';
 
 interface StepProps {
@@ -13,38 +13,16 @@ interface StepProps {
 }
 
 export function Step5Success({ data }: StepProps) {
+  const hasSentEmail = useRef(false);
+
   useEffect(() => {
-    // Primary Welcome Email via EmailJS
-    const sendWelcomeEmail = async () => {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-
-      if (!serviceId || !templateId || !publicKey || serviceId === 'your_service_id_here') {
-        console.warn('EmailJS keys missing or placeholder used. Welcome email skipped.');
-        return;
-      }
-
-      try {
-        await emailjs.send(
-          serviceId, 
-          templateId, 
-          {
-            to_email: data.email,
-            to_name: data.fullName,
-            username: data.username,
-            platform_url: window.location.origin,
-          },
-          publicKey
-        );
-      } catch (err) {
-        // Silent fail for background process
-        console.warn('Welcome email background process failed.', err);
-      }
-    };
-    
-    sendWelcomeEmail();
-  }, [data.email, data.fullName, data.username]);
+    // Primary Welcome Email via the EmailJS utility
+    if (!hasSentEmail.current && data.email && data.fullName) {
+      const platformUrl = window.location.origin;
+      sendWelcomeEmail(data.fullName, platformUrl, data.email);
+      hasSentEmail.current = true;
+    }
+  }, [data.email, data.fullName]);
 
   return (
     <div className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500">
