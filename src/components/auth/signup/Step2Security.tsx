@@ -1,5 +1,6 @@
+
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Mail, Lock, ChevronLeft, Check, Info, ShieldCheck, AlertCircle } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
@@ -26,6 +27,7 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
+  // Email validation and availability check
   useEffect(() => {
     if (!data.email) {
       setEmailStatus('idle');
@@ -35,8 +37,14 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
 
     const isFormatValid = validateEmail(data.email);
     if (!isFormatValid) {
-      setEmailStatus('invalid');
-      setEmailError("Please enter a valid email address.");
+      // Don't show "invalid" immediately while typing
+      if (data.email.includes('@') && data.email.includes('.')) {
+        setEmailStatus('invalid');
+        setEmailError("Please enter a valid email address.");
+      } else {
+        setEmailStatus('idle');
+        setEmailError(null);
+      }
       return;
     }
 
@@ -60,24 +68,25 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
       } catch (e) {
         setEmailStatus('idle');
       }
-    }, 500);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, [data.email, db]);
 
-  const pDetails = validatePassword(data.password || '');
+  // Password validation
   const isMinLength = (data.password?.length || 0) >= 8;
-  const hasComplexity = [pDetails.hasNumber, pDetails.hasUpper, pDetails.hasSpecial].filter(Boolean).length >= 1;
-  const isStrongEnough = isMinLength && (data.password?.length || 0) > 0;
-  
   const passwordsMatch = data.password === data.confirmPassword && (data.confirmPassword?.length || 0) > 0;
 
-  const canSubmit = 
-    emailStatus === 'valid' && 
-    isStrongEnough && 
-    passwordsMatch && 
-    data.termsAccepted &&
-    !isLoading;
+  // Final button activation logic
+  const canSubmit = useMemo(() => {
+    return (
+      emailStatus === 'valid' && 
+      isMinLength && 
+      passwordsMatch && 
+      data.termsAccepted &&
+      !isLoading
+    );
+  }, [emailStatus, isMinLength, passwordsMatch, data.termsAccepted, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

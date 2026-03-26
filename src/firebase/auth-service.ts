@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -47,17 +48,22 @@ export async function checkUsernameAvailability(db: Firestore, username: string)
 }
 
 /**
- * Validates email availability.
+ * Validates email availability using the emails lookup collection.
  */
 export async function checkEmailAvailability(db: Firestore, email: string) {
-  const q = query(collection(db, 'users'), where('email', '==', email.toLowerCase()), limit(1));
-  const snapshot = await getDocs(q);
-
-  if (!snapshot.empty) {
-    return { available: false, reason: "taken" };
+  const normalizedEmail = email.toLowerCase().trim();
+  const docRef = doc(db, 'emails', normalizedEmail);
+  
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { available: false, reason: "taken" };
+    }
+    return { available: true };
+  } catch (error) {
+    console.error("Email check failed:", error);
+    return { available: false, reason: "error" };
   }
-
-  return { available: true };
 }
 
 /**
@@ -136,8 +142,10 @@ export async function completeUserCreation(
     deviceFingerprint?: string | null;
   }
 ) {
+  const normalizedEmail = userData.email.toLowerCase().trim();
+
   // 1. Pre-checks for uniqueness
-  const emailCheck = await checkEmailAvailability(db, userData.email);
+  const emailCheck = await checkEmailAvailability(db, normalizedEmail);
   if (!emailCheck.available) throw new Error("email_taken");
 
   const usernameCheck = await checkUsernameAvailability(db, userData.username);
@@ -151,7 +159,7 @@ export async function completeUserCreation(
   }
 
   // 2. Create Auth User
-  const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+  const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, userData.password);
   const firebaseUser = userCredential.user;
 
   // 3. Update Auth Profile
@@ -164,11 +172,12 @@ export async function completeUserCreation(
   await runTransaction(db, async (transaction) => {
     const userRef = doc(db, 'users', firebaseUser.uid);
     const usernameRef = doc(db, 'usernames', userData.username.toLowerCase());
+    const emailLookupRef = doc(db, 'emails', normalizedEmail);
     const referralCodeRef = doc(db, 'referralCodes', newUserReferralCode);
 
     transaction.set(userRef, {
       uid: firebaseUser.uid,
-      email: userData.email.toLowerCase(),
+      email: normalizedEmail,
       fullName: userData.fullName,
       username: userData.username.toLowerCase(),
       phone: userData.phone,
@@ -189,6 +198,11 @@ export async function completeUserCreation(
       createdAt: serverTimestamp()
     });
 
+    transaction.set(emailLookupRef, {
+      uid: firebaseUser.uid,
+      createdAt: serverTimestamp()
+    });
+
     transaction.set(referralCodeRef, {
       uid: firebaseUser.uid,
       createdAt: serverTimestamp()
@@ -197,7 +211,7 @@ export async function completeUserCreation(
 
   return {
     uid: firebaseUser.uid,
-    email: firebaseUser.email,
+    email: normalizedEmail,
     username: userData.username,
     referralCode: newUserReferralCode
   };
@@ -208,7 +222,7 @@ export async function completeUserCreation(
  */
 export async function signInUser(auth: Auth, db: Firestore, email: string, password: string) {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
     const user = userCredential.user;
 
     if (!user.emailVerified) {
@@ -243,7 +257,7 @@ export async function signInUser(auth: Auth, db: Firestore, email: string, passw
  */
 export async function resetPassword(auth: Auth, email: string) {
   try {
-    await sendPasswordResetEmail(auth, email, {
+    await sendPasswordResetEmail(auth, email.toLowerCase().trim(), {
       url: `${window.location.origin}/login`
     });
   } catch (error: any) {
@@ -284,12 +298,14 @@ export async function deleteUnverifiedUser(auth: Auth, db: Firestore, user: Fire
   if (userSnap.exists()) {
     const data = userSnap.data();
     const usernameRef = doc(db, 'usernames', data.username.toLowerCase());
+    const emailRef = doc(db, 'emails', data.email.toLowerCase());
     const referralCodeRef = doc(db, 'referralCodes', data.referralCode);
 
     // Using runTransaction for cleanup consistency
     await runTransaction(db, async (transaction) => {
       transaction.delete(userRef);
       transaction.delete(usernameRef);
+      transaction.delete(emailRef);
       transaction.delete(referralCodeRef);
     });
   }

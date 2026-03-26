@@ -1,7 +1,8 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Tag, ChevronRight, Loader2 } from 'lucide-react';
+import { User, Tag, ChevronRight } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';

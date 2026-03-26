@@ -124,6 +124,19 @@
         }
       }
     },
+    "EmailLookup": {
+      "title": "EmailLookup",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "ReferralCodeLookup": {
       "title": "ReferralCodeLookup",
       "type": "object",
@@ -173,6 +186,22 @@
             {
               "name": "username",
               "description": "The unique username"
+            }
+          ]
+        }
+      },
+      {
+        "path": "/emails/{email}",
+        "definition": {
+          "entityName": "EmailLookup",
+          "schema": {
+            "$ref": "#/backend/entities/EmailLookup"
+          },
+          "description": "Lookup table for unique emails.",
+          "params": [
+            {
+              "name": "email",
+              "description": "The normalized lowercase email"
             }
           ]
         }
