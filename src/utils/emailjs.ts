@@ -1,4 +1,3 @@
-
 import emailjs from '@emailjs/browser';
 
 /**
@@ -19,21 +18,19 @@ export async function sendWelcomeEmail(fullName: string, platformUrl: string, to
   }
 
   try {
-    // Note: Template fields are specific to your EmailJS account.
-    // Based on requirements: fullName and platformUrl are included.
-    // We also pass to_email to ensure EmailJS knows who to send it to.
-    await emailjs.send(
+    const result = await emailjs.send(
       serviceId,
       templateId,
       {
         fullName,
         platformUrl,
-        to_email: toEmail, // Typically required by EmailJS templates to address the recipient
+        to_email: toEmail,
       },
       publicKey
     );
-  } catch (error) {
-    // Silent fail as requested - only log to console
-    console.error('EmailJS welcome email background process failed:', error);
+    console.log('Welcome email sent successfully:', result.status, result.text);
+  } catch (error: any) {
+    // Improved error logging for debugging
+    console.error('EmailJS welcome email background process failed:', error?.text || error);
   }
 }

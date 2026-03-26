@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useMemo } from 'react';
 import { Search, ChevronDown, Landmark, Check } from 'lucide-react';
@@ -65,7 +64,7 @@ export function BankSelector({ selectedBankName, onSelect, disabled }: BankSelec
   return (
     <div className="w-full">
       <label className="block text-[11px] font-bold text-ivory-40 tracking-wider mb-6 uppercase">
-        Select Bank
+        Choose Your Bank
       </label>
       
       <Dialog open={open} onOpenChange={setOpen}>
@@ -81,9 +80,9 @@ export function BankSelector({ selectedBankName, onSelect, disabled }: BankSelec
             )}
           >
             <div className="flex items-center gap-10 overflow-hidden">
-              <Landmark size={16} className={selectedBankName ? "text-gold" : "text-ivory-40"} />
-              <span className="truncate text-[14px] font-medium">
-                {selectedBankName || "Choose your bank"}
+              <Landmark size={18} className={selectedBankName ? "text-gold" : "text-ivory-40"} />
+              <span className="truncate text-[15px] font-medium">
+                {selectedBankName || "Select Bank"}
               </span>
             </div>
             <ChevronDown size={16} className="text-ivory-40 shrink-0" />
@@ -92,29 +91,29 @@ export function BankSelector({ selectedBankName, onSelect, disabled }: BankSelec
         
         <DialogContent className="bg-surface border-gold-border p-0 max-w-[400px] gap-0 overflow-hidden sm:rounded-[20px] shadow-2xl">
           <DialogHeader className="p-16 border-b border-white-15">
-            <DialogTitle className="font-headline text-ivory text-[17px]">Select Bank</DialogTitle>
+            <DialogTitle className="font-headline text-ivory text-[17px]">Select Your Bank</DialogTitle>
           </DialogHeader>
           
           <div className="p-12">
             <div className="relative">
-              <Search className="absolute left-12 top-1/2 -translate-y-1/2 text-ivory-40" size={14} />
+              <Search className="absolute left-12 top-1/2 -translate-y-1/2 text-ivory-40" size={16} />
               <input
                 autoFocus
                 placeholder="Search banks..."
-                className="w-full h-[40px] bg-white/5 border border-white-15 rounded-lg pl-36 pr-12 text-white text-sm outline-none focus:border-gold/50 transition-colors placeholder:text-ivory-25"
+                className="w-full h-[44px] bg-white/5 border border-white-15 rounded-xl pl-40 pr-12 text-white text-[15px] outline-none focus:border-gold/50 transition-colors placeholder:text-ivory-25"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
           
-          <div className="max-h-[280px] overflow-y-auto px-6 pb-12 custom-scrollbar">
+          <div className="max-h-[300px] overflow-y-auto px-8 pb-16 custom-scrollbar">
             {filteredBanks.length > 0 ? (
               filteredBanks.map((bank) => (
                 <button
                   key={bank.code}
                   className={cn(
-                    "w-full px-12 py-9 flex items-center justify-between rounded-lg transition-colors group mb-1",
+                    "w-full px-12 py-10 flex items-center justify-between rounded-xl transition-colors group mb-2",
                     selectedBankName === bank.name ? "bg-gold/10 text-gold" : "text-ivory-60 hover:bg-white/5 hover:text-white"
                   )}
                   onClick={() => {
@@ -123,14 +122,14 @@ export function BankSelector({ selectedBankName, onSelect, disabled }: BankSelec
                     setSearch('');
                   }}
                 >
-                  <span className="text-[13px] font-medium">{bank.name}</span>
-                  {selectedBankName === bank.name && <Check size={14} />}
+                  <span className="text-[14px] font-medium">{bank.name}</span>
+                  {selectedBankName === bank.name && <Check size={16} />}
                 </button>
               ))
             ) : (
-              <div className="py-24 text-center flex flex-col items-center gap-6">
-                <Landmark size={20} className="text-ivory-20" />
-                <p className="text-ivory-40 text-xs">No results for "{search}"</p>
+              <div className="py-32 text-center flex flex-col items-center gap-8">
+                <Landmark size={24} className="text-ivory-20" />
+                <p className="text-ivory-40 text-sm">No banks found for "{search}"</p>
               </div>
             )}
           </div>

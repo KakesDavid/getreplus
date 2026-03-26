@@ -26,24 +26,6 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
   // Memoize bankCode access
   const bankCode = (data as any).selectedBankCode;
 
-  // Persistence and Validation Sync Effect
-  useEffect(() => {
-    // 1. Restore persisted state if available
-    if (data.bankVerificationPersisted && !data.bankVerified) {
-      onUpdate({ 
-        bankVerified: data.bankVerificationPersisted.bankVerified,
-        verifiedAccountName: data.bankVerificationPersisted.verifiedAccountName,
-        nameMatchPassed: data.bankVerificationPersisted.nameMatchPassed
-      });
-      return;
-    }
-
-    // 2. Clear verification if inputs change and become invalid
-    if (data.bankVerified && (data.accountNumber.length !== 10 || !data.selectedBank)) {
-      onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
-    }
-  }, [data.accountNumber, data.selectedBank, data.bankVerified, data.bankVerificationPersisted, onUpdate]);
-
   const verifyAccount = useCallback(async (account: string, code: string) => {
     if (isVerifying) return;
     setIsVerifying(true);
@@ -54,9 +36,13 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
       
       if (result.success) {
         const verifiedName = result.accountName;
-        const userParts = data.fullName.toLowerCase().split(' ');
-        const verifiedParts = verifiedName.toLowerCase().split(' ');
-        const nameMatch = userParts.some(part => part.length > 2 && verifiedParts.some(vp => vp.includes(part) || part.includes(vp)));
+        const userParts = data.fullName.toLowerCase().split(' ').filter(p => p.length > 2);
+        const verifiedParts = verifiedName.toLowerCase().split(' ').filter(p => p.length > 2);
+        
+        // At least one significant name part should match
+        const nameMatch = userParts.some(part => 
+          verifiedParts.some(vp => vp.includes(part) || part.includes(vp))
+        );
 
         const verificationResult = {
           bankVerified: true,
@@ -79,16 +65,23 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     }
   }, [data.fullName, onUpdate, isVerifying]);
 
-  // Trigger verification effect
+  // Effect to handle input changes and trigger verification
   useEffect(() => {
+    // 1. If valid length and bank is selected, but not yet verified or error exists
     if (data.accountNumber.length === 10 && bankCode && !data.bankVerified && !isVerifying && !error) {
-      verifyAccount(data.accountNumber, bankCode);
+      const timer = setTimeout(() => verifyAccount(data.accountNumber, bankCode), 500);
+      return () => clearTimeout(timer);
     }
-  }, [data.accountNumber, bankCode, data.bankVerified, isVerifying, verifyAccount, error]);
+    
+    // 2. Clear verification if input becomes invalid
+    if (data.bankVerified && (data.accountNumber.length !== 10 || !data.selectedBank)) {
+      onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
+    }
+  }, [data.accountNumber, bankCode, data.bankVerified, isVerifying, verifyAccount, data.selectedBank, error]);
 
   const handleBankSelect = useCallback((name: string, code: string) => {
     onUpdate({ selectedBank: name, selectedBankCode: code } as any);
-    setError(null); // Clear errors when bank changes
+    setError(null);
   }, [onUpdate]);
 
   const handleFinish = async () => {
@@ -134,8 +127,8 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         <p className="text-ivory-50 text-[12px] mt-1">Where you want to receive your money.</p>
       </div>
 
-      <div className="space-y-10">
-        <div className="bg-white/5 border border-white-15 rounded-2xl p-12 space-y-8">
+      <div className="space-y-12">
+        <div className="bg-white/5 border border-white-15 rounded-2xl p-12 space-y-12">
           <BankSelector 
             selectedBankName={data.selectedBank}
             onSelect={handleBankSelect}
@@ -162,38 +155,40 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         {isVerifying && (
           <div className="flex items-center justify-center gap-8 text-gold py-1 animate-pulse">
             <Loader2 className="animate-spin" size={14} />
-            <span className="text-[11px] font-medium">Resolving account via Paystack...</span>
+            <span className="text-[11px] font-medium">Resolving via Paystack...</span>
           </div>
         )}
 
         {data.bankVerified && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
-            <div className="bg-obsidian border border-gold/20 rounded-xl p-10 flex items-center gap-10">
-              <div className="w-32 h-32 bg-gold/10 rounded-full flex items-center justify-center shrink-0">
-                <Landmark className="text-gold" size={16} />
+          <div className="space-y-8 animate-in fade-in slide-in-from-top-2">
+            <div className="bg-obsidian border border-gold/20 rounded-xl p-12 flex items-center gap-12">
+              <div className="w-36 h-36 bg-gold/10 rounded-full flex items-center justify-center shrink-0">
+                <Landmark className="text-gold" size={18} />
               </div>
               <div className="overflow-hidden">
-                <span className="text-[9px] font-bold text-ivory-40 uppercase tracking-wider block mb-0.5">Account Name</span>
-                <div className="text-[13px] font-headline font-bold text-gold truncate">{data.verifiedAccountName}</div>
+                <span className="text-[10px] font-bold text-ivory-40 uppercase tracking-wider block mb-0.5">Verified Account Name</span>
+                <div className="text-[14px] font-headline font-bold text-gold truncate leading-tight uppercase">
+                  {data.verifiedAccountName}
+                </div>
               </div>
             </div>
 
             {data.nameMatchPassed ? (
-              <div className="flex items-center gap-6 text-emerald bg-emerald/10 border border-emerald/20 p-8 rounded-lg">
-                <CheckCircle2 size={14} className="shrink-0" />
-                <span className="text-[11px] font-bold">Identity Verified ✓</span>
+              <div className="flex items-center gap-8 text-emerald bg-emerald/10 border border-emerald/20 p-8 rounded-lg">
+                <CheckCircle2 size={16} className="shrink-0" />
+                <span className="text-[11px] font-bold">Identity Confirmed ✓</span>
               </div>
             ) : (
-              <div className="bg-error-subtle border border-error-border p-10 rounded-xl space-y-4">
+              <div className="bg-error-subtle border border-error-border p-12 rounded-xl space-y-4">
                 <div className="flex items-center gap-8 text-error">
-                  <AlertCircle size={14} className="shrink-0" />
-                  <span className="text-[11px] font-bold">Name Mismatch</span>
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span className="text-[12px] font-bold">Account Name Mismatch</span>
                 </div>
-                <p className="text-[10px] text-error/80 leading-relaxed">
-                  Bank name doesn't match your profile.
+                <p className="text-[11px] text-error/80 leading-relaxed">
+                  The name at the bank doesn't match your profile. This will block your withdrawals.
                 </p>
-                <button onClick={onPrev} className="text-[11px] font-bold text-gold hover:underline">
-                  Edit Profile
+                <button onClick={onPrev} className="text-[12px] font-bold text-gold hover:underline">
+                  Go back and fix profile name
                 </button>
               </div>
             )}
@@ -207,14 +202,14 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="pt-4">
           <GoldButton 
             onClick={handleFinish}
             isLoading={isFinishing}
             isDisabled={!data.bankVerified || !data.nameMatchPassed}
-            className="h-[48px]"
+            className="h-[52px]"
           >
-            {isFinishing ? "Linking Account..." : "Finish Registration"}
+            {isFinishing ? "Linking Account..." : "Complete Registration"}
           </GoldButton>
         </div>
       </div>
