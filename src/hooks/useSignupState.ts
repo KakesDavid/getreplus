@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useCallback, useEffect } from 'react';
 
@@ -35,7 +36,7 @@ export interface SignupData {
   firebaseUserUid?: string;
 }
 
-const STORAGE_KEY = 'getreplus_signup_state';
+const STORAGE_KEY = 'getreplus_signup_state_v2';
 
 export function useSignupState() {
   const [step, setStep] = useState<SignupStep>(1);
@@ -71,7 +72,13 @@ export function useSignupState() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setFormData(prev => ({ ...prev, ...parsed.formData, password: '', confirmPassword: '' }));
+        // We never restore passwords for security
+        setFormData(prev => ({ 
+          ...prev, 
+          ...parsed.formData, 
+          password: '', 
+          confirmPassword: '' 
+        }));
         setStep(parsed.step || 1);
       } catch (e) {
         console.error("Failed to parse signup state", e);
@@ -90,7 +97,7 @@ export function useSignupState() {
       formData: persistableData
     }));
 
-    // Clear on success
+    // Clear on absolute success
     if (step === 5) {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -103,7 +110,7 @@ export function useSignupState() {
       setTimeout(() => {
         setStep((s) => (s + 1) as SignupStep);
         setIsTransitioning(false);
-      }, 250);
+      }, 300);
     }
   }, [step]);
 
@@ -114,7 +121,7 @@ export function useSignupState() {
       setTimeout(() => {
         setStep((s) => (s - 1) as SignupStep);
         setIsTransitioning(false);
-      }, 250);
+      }, 300);
     }
   }, [step]);
 

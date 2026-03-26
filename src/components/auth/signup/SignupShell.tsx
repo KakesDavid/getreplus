@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useEffect } from 'react';
 import { useSignupState } from '@/hooks/useSignupState';
@@ -15,19 +16,27 @@ export function SignupShell() {
   const { user, isUserLoading } = useUser();
   const { step, formData, direction, isTransitioning, isHydrated, nextStep, prevStep, updateData, jumpToStep } = useSignupState();
 
-  // Handle Return from Email Verification
+  // Handle Return from Email Verification or Refresh
   useEffect(() => {
-    if (!isUserLoading && user && user.emailVerified) {
-      // If user is verified and on an earlier step, jump to Bank details
-      if (step < 4) {
+    if (!isUserLoading && user) {
+      // If user is verified but hasn't finished the profile (Step 4 is Bank)
+      if (user.emailVerified && step < 4) {
         jumpToStep(4);
-        updateData({ firebaseUserUid: user.uid, email: user.email || formData.email });
+        updateData({ 
+          firebaseUserUid: user.uid, 
+          email: user.email || formData.email 
+        });
       }
     }
   }, [user, isUserLoading, step, jumpToStep, updateData, formData.email]);
 
   const renderStep = () => {
-    if (!isHydrated) return <div className="min-h-[400px] flex items-center justify-center text-ivory-30">Loading your progress...</div>;
+    if (!isHydrated) return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center gap-12 text-ivory-30">
+        <div className="w-24 h-24 border-2 border-gold/20 border-t-gold rounded-full animate-spin" />
+        <span className="text-sm font-medium">Restoring your progress...</span>
+      </div>
+    );
 
     switch (step) {
       case 1:
@@ -46,24 +55,25 @@ export function SignupShell() {
   };
 
   return (
-    <div className="w-full max-w-[480px] animate-in fade-in duration-500 mx-auto pt-0 pb-16 lg:pt-8 lg:pb-24">
-      <div className="flex flex-col items-center mb-16 lg:mb-24">
-        <span className="font-subheadline font-medium text-ivory-40 text-[13px] mb-2 uppercase tracking-widest">Registration</span>
-        <h1 className="font-headline font-bold text-ivory text-[22px] lg:text-[26px]">Join GetrePlus</h1>
+    <div className="w-full max-w-[480px] animate-in fade-in duration-500 mx-auto mt-0 mb-16">
+      <div className="flex flex-col items-center mb-12">
+        <span className="font-subheadline font-medium text-gold text-[12px] mb-2 uppercase tracking-[0.2em]">Registration</span>
+        <h1 className="font-headline font-bold text-ivory text-[24px] lg:text-[28px]">Join GetrePlus</h1>
       </div>
 
-      <div className="px-16 mb-20 lg:mb-24">
+      <div className="px-12 mb-16">
         <ProgressBar step={step} total={5} />
         <StepDots currentStep={step} totalSteps={5} />
       </div>
 
-      <div className="bg-surface border border-border-subtle rounded-[24px] p-20 sm:p-24 lg:p-32 shadow-card-shadow relative min-h-[440px] overflow-hidden">
+      <div className="bg-surface border border-gold/15 rounded-[24px] p-20 sm:p-24 lg:p-32 shadow-card-shadow relative min-h-[440px] overflow-hidden group">
+        <div className="noise-overlay" />
         <div 
           className={cn(
-            "w-full transition-all duration-250 ease-in-out",
-            isTransitioning ? "opacity-0" : "opacity-100",
-            isTransitioning && direction === 'forward' && "-translate-x-8",
-            isTransitioning && direction === 'backward' && "translate-x-8"
+            "w-full transition-all duration-300 ease-in-out relative z-10",
+            isTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100",
+            isTransitioning && direction === 'forward' && "-translate-x-4",
+            isTransitioning && direction === 'backward' && "translate-x-4"
           )}
         >
           {renderStep()}
