@@ -13,19 +13,37 @@ export const validatePassword = (password: string) => {
 };
 
 export const validatePhone = (phone: string) => {
-  // Nigerian phone format: 11 digits starting with 07, 08, or 09
-  // Clean non-digits first
+  // Clean non-digits
   const cleaned = phone.replace(/\D/g, '');
-  const re = /^(07|08|09)\d{9}$/;
-  return re.test(cleaned);
+  
+  // Nigerian phone formats:
+  // 11 digits starting with 07, 08, 09
+  // 10 digits starting with 7, 8, 9 (the leading zero is implied by +234)
+  const re = /^0?(7|07|8|08|9|09)\d{8,9}$/;
+  
+  // Must be either 10 or 11 digits after cleaning
+  return (cleaned.length === 10 || cleaned.length === 11) && (
+    cleaned.startsWith('0') ? /^(07|08|09)\d{8}$/.test(cleaned) : /^(7|8|9)\d{9}$/.test(cleaned)
+  );
+};
+
+/**
+ * Normalizes a Nigerian phone number to the 11-digit 080... format
+ */
+export const normalizePhone = (phone: string): string => {
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 10 && /^[789]/.test(cleaned)) {
+    cleaned = '0' + cleaned;
+  }
+  return cleaned;
 };
 
 export const validateFullName = (name: string) => {
-  // Min 3 chars, at least two words, only letters/hyphens/apostrophes
+  // Relaxed: At least 3 characters, typically two words but we allow one for flexibility 
+  // as long as it's a reasonable length (e.g. "Chukwuemeka")
   const trimmed = name.trim();
-  const words = trimmed.split(/\s+/);
   const re = /^[a-zA-Z'\-\s]+$/;
-  return words.length >= 2 && trimmed.length >= 3 && re.test(trimmed);
+  return trimmed.length >= 3 && re.test(trimmed);
 };
 
 export const validateUsername = (username: string) => {

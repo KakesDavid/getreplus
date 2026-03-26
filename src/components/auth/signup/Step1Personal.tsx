@@ -5,7 +5,7 @@ import { User, Tag, ChevronRight, Loader2 } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
-import { validateFullName, validatePhone, validateUsername } from '@/utils/validators';
+import { validateFullName, validatePhone, validateUsername, normalizePhone } from '@/utils/validators';
 import { useFirestore } from '@/firebase';
 import { checkUsernameAvailability, validateReferralCode } from '@/firebase/auth-service';
 import { useSearchParams } from 'next/navigation';
@@ -109,7 +109,11 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isValid) onNext();
+    if (isValid) {
+      // Normalize phone number before moving to next step
+      onUpdate({ phone: normalizePhone(data.phone) });
+      onNext();
+    }
   };
 
   return (
@@ -126,7 +130,7 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
           leftIcon={<User />}
           value={data.fullName}
           onChange={(e) => onUpdate({ fullName: e.target.value })}
-          helperText="Must match your bank account name exactly."
+          helperText="Should match your bank account name."
           validationState={data.fullName ? (validateFullName(data.fullName) ? 'valid' : 'invalid') : 'idle'}
           required
         />
@@ -160,7 +164,8 @@ export function Step1Personal({ data, onNext, onUpdate }: StepProps) {
             const val = e.target.value.replace(/\D/g, '').slice(0, 11);
             onUpdate({ phone: val });
           }}
-          validationState={data.phone.length === 11 ? (validatePhone(data.phone) ? 'valid' : 'invalid') : 'idle'}
+          validationState={data.phone.length >= 10 ? (validatePhone(data.phone) ? 'valid' : 'invalid') : 'idle'}
+          helperText="Enter your mobile number (e.g., 080... or 80...)"
           required
         />
 
