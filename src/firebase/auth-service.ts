@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -268,7 +267,7 @@ export async function resetPassword(auth: Auth, email: string) {
 }
 
 /**
- * Sends email verification.
+ * Sends email verification with continue URL back to signup.
  */
 export async function sendVerification(user: FirebaseUser) {
   await sendEmailVerification(user, {
@@ -301,7 +300,6 @@ export async function deleteUnverifiedUser(auth: Auth, db: Firestore, user: Fire
     const emailRef = doc(db, 'emails', data.email.toLowerCase());
     const referralCodeRef = doc(db, 'referralCodes', data.referralCode);
 
-    // Using runTransaction for cleanup consistency
     await runTransaction(db, async (transaction) => {
       transaction.delete(userRef);
       transaction.delete(usernameRef);

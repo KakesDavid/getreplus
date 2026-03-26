@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSignupState } from '@/hooks/useSignupState';
 import { Step1Personal } from './Step1Personal';
 import { Step2Security } from './Step2Security';
@@ -9,11 +9,26 @@ import { Step5Success } from './Step5Success';
 import { ProgressBar } from './ProgressBar';
 import { StepDots } from './StepDots';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 export function SignupShell() {
-  const { step, formData, direction, isTransitioning, nextStep, prevStep, updateData } = useSignupState();
+  const { user, isUserLoading } = useUser();
+  const { step, formData, direction, isTransitioning, isHydrated, nextStep, prevStep, updateData, jumpToStep } = useSignupState();
+
+  // Handle Return from Email Verification
+  useEffect(() => {
+    if (!isUserLoading && user && user.emailVerified) {
+      // If user is verified and on an earlier step, jump to Bank details
+      if (step < 4) {
+        jumpToStep(4);
+        updateData({ firebaseUserUid: user.uid, email: user.email || formData.email });
+      }
+    }
+  }, [user, isUserLoading, step, jumpToStep, updateData, formData.email]);
 
   const renderStep = () => {
+    if (!isHydrated) return <div className="min-h-[400px] flex items-center justify-center text-ivory-30">Loading your progress...</div>;
+
     switch (step) {
       case 1:
         return <Step1Personal data={formData} onNext={nextStep} onUpdate={updateData} />;

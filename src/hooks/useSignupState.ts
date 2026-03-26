@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export type SignupStep = 1 | 2 | 3 | 4 | 5;
 
@@ -27,7 +27,7 @@ export interface SignupData {
   verifiedAccountName: string;
   bankVerified: boolean;
   nameMatchPassed: boolean;
-  bankVerificationPersisted: any; // Data that survives step changes
+  bankVerificationPersisted: any;
   
   // Meta
   signupIp: string;
@@ -35,10 +35,13 @@ export interface SignupData {
   firebaseUserUid?: string;
 }
 
+const STORAGE_KEY = 'getreplus_signup_state';
+
 export function useSignupState() {
   const [step, setStep] = useState<SignupStep>(1);
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const [formData, setFormData] = useState<SignupData>({
     fullName: '',
@@ -61,6 +64,37 @@ export function useSignupState() {
     signupIp: '',
     deviceFingerprint: '',
   });
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setFormData(prev => ({ ...prev, ...parsed.formData, password: '', confirmPassword: '' }));
+        setStep(parsed.step || 1);
+      } catch (e) {
+        console.error("Failed to parse signup state", e);
+      }
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    const { password, confirmPassword, ...persistableData } = formData;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      step,
+      formData: persistableData
+    }));
+
+    // Clear on success
+    if (step === 5) {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [formData, step, isHydrated]);
 
   const nextStep = useCallback(() => {
     if (step < 5) {
@@ -88,8 +122,8 @@ export function useSignupState() {
     setFormData((prev) => ({ ...prev, ...data }));
   }, []);
 
-  const persistBankVerification = useCallback((data: any) => {
-    setFormData((prev) => ({ ...prev, bankVerificationPersisted: data }));
+  const jumpToStep = useCallback((target: SignupStep) => {
+    setStep(target);
   }, []);
 
   return { 
@@ -97,9 +131,10 @@ export function useSignupState() {
     formData, 
     direction,
     isTransitioning,
+    isHydrated,
     nextStep, 
     prevStep, 
     updateData,
-    persistBankVerification 
+    jumpToStep
   };
 }
