@@ -39,8 +39,8 @@ export function PasswordStrengthMeter({ password }: { password?: string }) {
   };
 
   return (
-    <div className="mt-12 animate-in fade-in slide-in-from-top-1 duration-300">
-      <div className="flex gap-4 h-4">
+    <div className="mt-8 animate-in fade-in slide-in-from-top-1 duration-300">
+      <div className="flex gap-3 h-2">
         {[0, 1, 2, 3].map((i) => (
           <div 
             key={i} 
@@ -52,8 +52,8 @@ export function PasswordStrengthMeter({ password }: { password?: string }) {
         ))}
       </div>
       <div className="flex justify-between items-center mt-6">
-        <span className={cn("text-[12px] font-subheadline font-semibold", strengthMap[strength].color)}>
-          Password Strength: {strengthMap[strength].label}
+        <span className={cn("text-[10px] font-bold uppercase tracking-wider", strengthMap[strength].color)}>
+          {strengthMap[strength].label}
         </span>
       </div>
     </div>

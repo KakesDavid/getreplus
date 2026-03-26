@@ -31,21 +31,21 @@ export function SignupShell() {
   };
 
   return (
-    <div className="w-full max-w-[480px] animate-in fade-in duration-500 mx-auto py-32 lg:py-48">
-      <div className="flex flex-col items-center mb-32">
-        <div className="w-40 h-40 bg-secondary rounded-xl flex items-center justify-center mb-16 shadow-button-glow animate-pulse-glow">
-          <span className="font-headline font-bold text-gold text-20">G+</span>
+    <div className="w-full max-w-[480px] animate-in fade-in duration-500 mx-auto py-24 lg:py-40">
+      <div className="flex flex-col items-center mb-24 lg:mb-32">
+        <div className="w-36 h-36 bg-secondary rounded-xl flex items-center justify-center mb-12 shadow-button-glow animate-pulse-glow">
+          <span className="font-headline font-bold text-gold text-18">G+</span>
         </div>
-        <span className="font-subheadline font-medium text-ivory-50 text-[14px] mb-4">Create your account</span>
-        <h1 className="font-headline font-bold text-ivory text-[24px] lg:text-[28px]">GetrePlus</h1>
+        <span className="font-subheadline font-medium text-ivory-40 text-[13px] mb-2 uppercase tracking-widest">Registration</span>
+        <h1 className="font-headline font-bold text-ivory text-[22px] lg:text-[26px]">Join GetrePlus</h1>
       </div>
 
-      <div className="px-16 mb-24">
+      <div className="px-16 mb-20 lg:mb-24">
         <ProgressBar step={step} total={5} />
         <StepDots currentStep={step} totalSteps={5} />
       </div>
 
-      <div className="bg-surface border border-border-subtle rounded-[24px] p-24 sm:p-32 lg:p-40 shadow-card-shadow relative min-h-[440px] overflow-hidden">
+      <div className="bg-surface border border-border-subtle rounded-[24px] p-20 sm:p-24 lg:p-32 shadow-card-shadow relative min-h-[440px] overflow-hidden">
         <div 
           className={cn(
             "w-full transition-all duration-250 ease-in-out",

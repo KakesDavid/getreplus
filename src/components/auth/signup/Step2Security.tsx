@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, ChevronLeft, Check, Info } from 'lucide-react';
+import { Mail, Lock, ChevronLeft, Check, Info, ShieldCheck } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { PasswordStrengthMeter } from '../shared/PasswordStrengthMeter';
@@ -44,9 +44,8 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
         } else {
           setEmailStatus('invalid');
           setEmailError(
-            <span>
-              This email is already registered.{' '}
-              <Link href="/login" className="text-gold underline font-medium">Sign in instead?</Link>
+            <span className="flex items-center gap-4">
+              Email taken. <Link href="/login" className="text-gold underline font-semibold">Sign in?</Link>
             </span>
           );
         }
@@ -77,10 +76,9 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     setIsLoading(true);
     setFirebaseError(null);
 
-    // 30s timeout implementation
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
-      setFirebaseError("Creation took too long. Please check your network and try again.");
+      setFirebaseError("Creation took too long. Please check your network.");
     }, 30000);
 
     try {
@@ -107,33 +105,42 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
       clearTimeout(timeoutId);
       const msgMap: any = {
         email_taken: "Email already in use.",
-        username_taken: "Username taken. Please choose another.",
-        invalid_referral: "The referral code is no longer valid."
+        username_taken: "Username taken.",
+        invalid_referral: "Referral code expired."
       };
-      setFirebaseError(msgMap[error.message] || "An unexpected error occurred. Please try again.");
+      setFirebaseError(msgMap[error.message] || "Account creation failed. Try again.");
       setIsLoading(false);
     }
   };
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-      <button
-        onClick={onPrev}
-        className="w-44 h-44 flex items-center justify-center text-ivory-60 hover:text-ivory mb-20 -ml-12 transition-colors"
-      >
-        <ChevronLeft size={24} />
-      </button>
+      {/* Header Area */}
+      <div className="flex items-center justify-between mb-20">
+        <button
+          onClick={onPrev}
+          className="w-32 h-32 flex items-center justify-center text-ivory-40 hover:text-gold transition-colors -ml-8"
+          type="button"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <div className="flex items-center gap-6 bg-white-15 px-10 py-4 rounded-full">
+           <ShieldCheck size={12} className="text-gold" />
+           <span className="text-[10px] font-bold text-gold uppercase tracking-widest">Secure Step</span>
+        </div>
+      </div>
 
-      <div className="mb-28">
-        <span className="text-[12px] font-body font-medium text-ivory-40 uppercase tracking-widest">Step 2 of 4</span>
-        <h2 className="font-headline font-bold text-ivory text-22 mt-4">Secure your account</h2>
+      <div className="mb-24">
+        <h2 className="font-headline font-bold text-ivory text-20 lg:text-24 leading-tight">Security & Access</h2>
+        <p className="text-ivory-50 text-13 lg:text-14 mt-2">Create your login credentials safely.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Email Field */}
         <AuthInput
           label="Email Address"
           type="email"
-          placeholder="emeka@example.com"
+          placeholder="e.g. emeka@gmail.com"
           leftIcon={<Mail />}
           value={data.email}
           onChange={(e) => onUpdate({ email: e.target.value })}
@@ -141,71 +148,90 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           errorMessage={emailError}
         />
 
-        <div className="space-y-8">
-          <div className="flex items-center justify-between mb-8">
-            <label className="text-[13px] font-body font-medium text-ivory-60 tracking-wider uppercase">
-              Create Password
-            </label>
-            <div className="group relative">
-              <Info size={14} className="text-ivory-30 cursor-help" />
-              <div className="absolute bottom-full right-0 mb-8 w-[200px] p-12 bg-surface border border-gold-border rounded-lg text-[11px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl">
-                Use at least 8 characters with a mix of letters, numbers, and symbols.
+        {/* Password Group */}
+        <div className="bg-white/5 border border-white-15 rounded-2xl p-16 lg:p-20 space-y-16">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-ivory-40 uppercase tracking-wider">
+                Password
+              </label>
+              <div className="group relative">
+                <Info size={14} className="text-ivory-25 cursor-help hover:text-gold transition-colors" />
+                <div className="absolute bottom-full right-0 mb-8 w-[180px] p-10 bg-obsidian border border-gold-border rounded-xl text-[10px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
+                  Min. 8 chars, 1 number, 1 uppercase.
+                </div>
               </div>
             </div>
+            <AuthInput
+              label=""
+              type="password"
+              placeholder="••••••••"
+              leftIcon={<Lock />}
+              value={data.password}
+              onChange={(e) => onUpdate({ password: e.target.value })}
+              className="h-48"
+            />
+            <PasswordStrengthMeter password={data.password} />
           </div>
-          <AuthInput
-            label=""
-            type="password"
-            placeholder="••••••••"
-            leftIcon={<Lock />}
-            value={data.password}
-            onChange={(e) => onUpdate({ password: e.target.value })}
-            className="mt-[-12px]"
-          />
-          <PasswordStrengthMeter password={data.password} />
+
+          <div className="space-y-4 pt-4 border-t border-white/5">
+            <label className="text-[11px] font-bold text-ivory-40 uppercase tracking-wider block">
+              Confirm Password
+            </label>
+            <AuthInput
+              label=""
+              type="password"
+              placeholder="••••••••"
+              leftIcon={<Lock />}
+              value={data.confirmPassword}
+              onChange={(e) => onUpdate({ confirmPassword: e.target.value })}
+              validationState={data.confirmPassword ? (passwordsMatch ? 'valid' : 'invalid') : 'idle'}
+              errorMessage={data.confirmPassword && !passwordsMatch ? "Does not match" : null}
+              className="h-48"
+            />
+          </div>
         </div>
 
-        <AuthInput
-          label="Confirm Password"
-          type="password"
-          placeholder="••••••••"
-          leftIcon={<Lock />}
-          value={data.confirmPassword}
-          onChange={(e) => onUpdate({ confirmPassword: e.target.value })}
-          validationState={data.confirmPassword ? (passwordsMatch ? 'valid' : 'invalid') : 'idle'}
-          errorMessage={data.confirmPassword && !passwordsMatch ? "Passwords don't match" : null}
-        />
-
-        <label className="flex items-start gap-12 py-12 cursor-pointer group">
-          <div className="relative pt-2">
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={data.termsAccepted}
-              onChange={(e) => onUpdate({ termsAccepted: e.target.checked })}
-              required
-            />
-            <div className={cn(
-              "w-[22px] h-[22px] rounded-md border-[1.5px] transition-all flex items-center justify-center",
-              data.termsAccepted ? "bg-gold-gradient border-transparent" : "border-white-20 bg-input-bg"
-            )}>
-              {data.termsAccepted && <Check size={14} className="text-obsidian animate-in zoom-in-50 duration-200" />}
+        {/* Terms Checkbox */}
+        <div className="py-8">
+          <label className="flex items-start gap-10 cursor-pointer group select-none">
+            <div className="relative mt-2">
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={data.termsAccepted}
+                onChange={(e) => onUpdate({ termsAccepted: e.target.checked })}
+                required
+              />
+              <div className={cn(
+                "w-[20px] h-[20px] rounded-md border-[1.5px] transition-all flex items-center justify-center",
+                data.termsAccepted ? "bg-gold-gradient border-transparent" : "border-white-20 bg-input-bg group-hover:border-gold/50"
+              )}>
+                {data.termsAccepted && <Check size={12} className="text-obsidian animate-in zoom-in-50 duration-200" />}
+              </div>
             </div>
-          </div>
-          <span className="text-[13px] font-body text-ivory-60 leading-relaxed group-hover:text-ivory-80 transition-colors">
-            I agree to the <Link href="/terms" className="text-gold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-gold hover:underline">Privacy Policy</Link>.
-          </span>
-        </label>
+            <span className="text-[12px] font-body text-ivory-40 leading-relaxed group-hover:text-ivory-70 transition-colors pt-1">
+              I agree to the <Link href="/terms" className="text-gold font-medium hover:underline">Terms</Link> and <Link href="/privacy" className="text-gold font-medium hover:underline">Privacy Policy</Link>.
+            </span>
+          </label>
+        </div>
 
-        {firebaseError && (
-          <div className="bg-error-subtle border border-error-border rounded-lg p-12 text-error text-[13px] animate-in slide-in-from-top-2">
-            {firebaseError}
-          </div>
-        )}
+        {/* Action & Global Error */}
+        <div className="space-y-12">
+          {firebaseError && (
+            <div className="bg-error-subtle border border-error-border rounded-xl p-10 flex items-center gap-8 text-error text-[12px] font-medium animate-in slide-in-from-top-2">
+              <Info size={14} className="shrink-0" />
+              {firebaseError}
+            </div>
+          )}
 
-        <div className="pt-12">
-          <GoldButton type="submit" isLoading={isLoading} isDisabled={!isValid}>
-            Secure My Account
+          <GoldButton 
+            type="submit" 
+            isLoading={isLoading} 
+            isDisabled={!isValid}
+            className="h-[52px]"
+          >
+            Create Secure Account
           </GoldButton>
         </div>
       </form>
