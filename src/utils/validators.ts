@@ -14,19 +14,22 @@ export const validatePassword = (password: string) => {
 
 export const validatePhone = (phone: string) => {
   // Nigerian phone format: 11 digits starting with 07, 08, or 09
-  const re = /^(070|071|080|081|090|091)\d{8}$/;
-  return re.test(phone.replace(/\s/g, ''));
+  // Clean non-digits first
+  const cleaned = phone.replace(/\D/g, '');
+  const re = /^(07|08|09)\d{9}$/;
+  return re.test(cleaned);
 };
 
 export const validateFullName = (name: string) => {
   // Min 3 chars, at least two words, only letters/hyphens/apostrophes
-  const words = name.trim().split(/\s+/);
+  const trimmed = name.trim();
+  const words = trimmed.split(/\s+/);
   const re = /^[a-zA-Z'\-\s]+$/;
-  return words.length >= 2 && name.length >= 3 && re.test(name);
+  return words.length >= 2 && trimmed.length >= 3 && re.test(trimmed);
 };
 
 export const validateUsername = (username: string) => {
-  // 3-20 characters. Letters, numbers, and underscores only.
-  const re = /^[a-zA-Z0-9_]{3,20}$/;
+  // 3-20 characters. Lowercase letters, numbers, and underscores only.
+  const re = /^[a-z0-9_]{3,20}$/;
   return re.test(username);
 };
