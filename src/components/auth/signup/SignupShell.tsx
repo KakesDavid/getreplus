@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useEffect } from 'react';
 import { useSignupState } from '@/hooks/useSignupState';
@@ -18,16 +17,19 @@ export function SignupShell() {
 
   // Handle Return from Email Verification or Refresh
   useEffect(() => {
-    if (!isUserLoading && user) {
-      if (user.emailVerified && step < 4) {
+    if (!isUserLoading && user && user.emailVerified) {
+      if (step < 4) {
         jumpToStep(4);
-        updateData({ 
-          firebaseUserUid: user.uid, 
-          email: user.email || formData.email 
-        });
+        // Only update if data is actually different to avoid redundant renders
+        if (formData.firebaseUserUid !== user.uid) {
+          updateData({ 
+            firebaseUserUid: user.uid, 
+            email: user.email || formData.email 
+          });
+        }
       }
     }
-  }, [user, isUserLoading, step, jumpToStep, updateData, formData.email]);
+  }, [user, isUserLoading, step, jumpToStep, updateData, formData.email, formData.firebaseUserUid]);
 
   const renderStep = () => {
     if (!isHydrated) return (
@@ -79,7 +81,6 @@ export function SignupShell() {
         </div>
       </div>
       
-      {/* Bottom spacer removal as requested */}
       <div className="h-16" />
     </div>
   );

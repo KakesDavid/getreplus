@@ -1,6 +1,5 @@
-
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle, Landmark } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
@@ -24,27 +23,37 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isFinishing, setIsFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Persistence of verification state
+  // Memoize bankCode access
+  const bankCode = (data as any).selectedBankCode;
+
+  // Persistence and Validation Sync Effect
   useEffect(() => {
+    // 1. Restore persisted state if available
     if (data.bankVerificationPersisted && !data.bankVerified) {
       onUpdate({ 
         bankVerified: data.bankVerificationPersisted.bankVerified,
         verifiedAccountName: data.bankVerificationPersisted.verifiedAccountName,
         nameMatchPassed: data.bankVerificationPersisted.nameMatchPassed
       });
+      return;
     }
-  }, [data.bankVerificationPersisted, data.bankVerified, onUpdate]);
 
-  const verifyAccount = useCallback(async (account: string, bankCode: string) => {
+    // 2. Clear verification if inputs change and become invalid
+    if (data.bankVerified && (data.accountNumber.length !== 10 || !data.selectedBank)) {
+      onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
+    }
+  }, [data.accountNumber, data.selectedBank, data.bankVerified, data.bankVerificationPersisted, onUpdate]);
+
+  const verifyAccount = useCallback(async (account: string, code: string) => {
+    if (isVerifying) return;
     setIsVerifying(true);
     setError(null);
     
     try {
-      const result = await resolveBankAccount(account, bankCode);
+      const result = await resolveBankAccount(account, code);
       
       if (result.success) {
         const verifiedName = result.accountName;
-        // Logic: Check if any part of the name matches (case insensitive)
         const userParts = data.fullName.toLowerCase().split(' ');
         const verifiedParts = verifiedName.toLowerCase().split(' ');
         const nameMatch = userParts.some(part => part.length > 2 && verifiedParts.some(vp => vp.includes(part) || part.includes(vp)));
@@ -68,18 +77,19 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     } finally {
       setIsVerifying(false);
     }
-  }, [data.fullName, onUpdate]);
+  }, [data.fullName, onUpdate, isVerifying]);
 
+  // Trigger verification effect
   useEffect(() => {
-    const bankCode = (data as any).selectedBankCode;
-    if (data.accountNumber.length === 10 && bankCode && !data.bankVerified && !isVerifying) {
+    if (data.accountNumber.length === 10 && bankCode && !data.bankVerified && !isVerifying && !error) {
       verifyAccount(data.accountNumber, bankCode);
     }
-    
-    if (data.bankVerified && (data.accountNumber.length !== 10 || !data.selectedBank)) {
-      onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
-    }
-  }, [data.accountNumber, (data as any).selectedBankCode, data.selectedBank, data.bankVerified, isVerifying, verifyAccount, onUpdate]);
+  }, [data.accountNumber, bankCode, data.bankVerified, isVerifying, verifyAccount, error]);
+
+  const handleBankSelect = useCallback((name: string, code: string) => {
+    onUpdate({ selectedBank: name, selectedBankCode: code } as any);
+    setError(null); // Clear errors when bank changes
+  }, [onUpdate]);
 
   const handleFinish = async () => {
     if (!data.bankVerified || !data.nameMatchPassed || isFinishing) return;
@@ -92,7 +102,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
 
       await updateUserBankAccount(db, data.firebaseUserUid, {
         bankName: data.selectedBank,
-        bankCode: (data as any).selectedBankCode || "000", 
+        bankCode: bankCode || "000", 
         accountNumber: data.accountNumber,
         accountName: data.verifiedAccountName
       });
@@ -128,7 +138,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         <div className="bg-white/5 border border-white-15 rounded-2xl p-12 space-y-8">
           <BankSelector 
             selectedBankName={data.selectedBank}
-            onSelect={(name, code) => onUpdate({ selectedBank: name, selectedBankCode: code } as any)}
+            onSelect={handleBankSelect}
             disabled={isVerifying || isFinishing}
           />
 
@@ -138,7 +148,11 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
             inputMode="numeric"
             maxLength={10}
             value={data.accountNumber}
-            onChange={(e) => onUpdate({ accountNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+              onUpdate({ accountNumber: val });
+              if (error) setError(null);
+            }}
             disabled={isVerifying || isFinishing}
             validationState={isVerifying ? 'loading' : (data.bankVerified ? 'valid' : 'idle')}
             className="h-[44px]"
