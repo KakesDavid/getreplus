@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle, Landmark } from 'lucide-react';
@@ -8,6 +9,7 @@ import { SignupData } from '@/hooks/useSignupState';
 import { useFirestore } from '@/firebase';
 import { updateUserBankAccount } from '@/firebase/auth-service';
 import { resolveBankAccount } from '@/app/actions/paystack';
+import { cn } from '@/lib/utils';
 
 interface StepProps {
   data: SignupData;
@@ -22,7 +24,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isFinishing, setIsFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Restore state if returning from Step 5
+  // Restore state if returning to the step
   useEffect(() => {
     if (data.bankVerificationPersisted && !data.bankVerified) {
       onUpdate({ 
@@ -42,7 +44,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
       
       if (result.success) {
         const verifiedName = result.accountName;
-        // Basic name matching logic: check if at least one name part matches
+        // Match logic: Check if any part of the name matches
         const userParts = data.fullName.toLowerCase().split(' ');
         const verifiedParts = verifiedName.toLowerCase().split(' ');
         const nameMatch = userParts.some(part => part.length > 2 && verifiedParts.includes(part));
@@ -59,7 +61,7 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         });
       } else {
         onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
-        setError(result.error || "Could not verify account.");
+        setError(result.error);
       }
     } catch (err) {
       setError("Network error. Please check your connection.");
@@ -68,14 +70,14 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     }
   }, [data.fullName, onUpdate]);
 
-  // Auto-trigger verification when fields are complete
+  // Trigger verification when account number is complete (10 digits)
   useEffect(() => {
     const bankCode = (data as any).selectedBankCode;
     if (data.accountNumber.length === 10 && bankCode && !data.bankVerified && !isVerifying) {
       verifyAccount(data.accountNumber, bankCode);
     }
     
-    // Reset verification if user changes details
+    // Reset if user changes details
     if (data.bankVerified && (data.accountNumber.length !== 10 || !data.selectedBank)) {
       onUpdate({ bankVerified: false, verifiedAccountName: '', nameMatchPassed: false });
     }
@@ -87,11 +89,6 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
     setIsFinishing(true);
     setError(null);
 
-    const timeoutId = setTimeout(() => {
-      setIsFinishing(false);
-      setError("Operation timed out. Please check your network and try again.");
-    }, 30000);
-
     try {
       if (!data.firebaseUserUid) throw new Error('Auth state missing');
 
@@ -102,38 +99,36 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         accountName: data.verifiedAccountName
       });
 
-      clearTimeout(timeoutId);
       onNext();
     } catch (err: any) {
-      clearTimeout(timeoutId);
-      setError("Failed to save bank details. Please try again.");
+      setError("Failed to link bank account. Please try again.");
       setIsFinishing(false);
     }
   };
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="flex items-center justify-between mb-16">
+      <div className="flex items-center justify-between mb-12">
         <button
           onClick={onPrev}
-          className="w-40 h-40 flex items-center justify-center text-ivory-40 hover:text-white transition-colors -ml-12"
+          className="w-36 h-36 flex items-center justify-center text-ivory-40 hover:text-white transition-colors -ml-10"
           aria-label="Back"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={20} />
         </button>
         <div className="flex items-center gap-6 bg-emerald/10 border border-emerald/20 px-10 py-3 rounded-full">
-           <ShieldCheck size={14} className="text-emerald" />
-           <span className="text-[10px] font-bold text-emerald uppercase tracking-widest">Paystack Secured</span>
+           <ShieldCheck size={12} className="text-emerald" />
+           <span className="text-[10px] font-bold text-emerald uppercase tracking-widest">Secure Link</span>
         </div>
       </div>
 
-      <div className="mb-20">
-        <h2 className="font-headline font-bold text-ivory text-[22px] leading-tight">Payout Details</h2>
-        <p className="text-ivory-50 text-[13px] mt-2">Required for your weekly Friday disbursements.</p>
+      <div className="mb-16">
+        <h2 className="font-headline font-bold text-ivory text-[22px] leading-tight">Payout Account</h2>
+        <p className="text-ivory-50 text-[13px] mt-1">Direct bank transfers every Friday.</p>
       </div>
 
-      <div className="space-y-16">
-        <div className="bg-white/5 border border-white-15 rounded-2xl p-16 space-y-16">
+      <div className="space-y-12">
+        <div className="bg-white/5 border border-white-15 rounded-2xl p-16 space-y-12">
           <BankSelector 
             selectedBankName={data.selectedBank}
             onSelect={(name, code) => onUpdate({ selectedBank: name, selectedBankCode: code } as any)}
@@ -159,43 +154,43 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
         </div>
 
         {isVerifying && (
-          <div className="flex items-center justify-center gap-8 text-gold py-8 animate-pulse">
+          <div className="flex items-center justify-center gap-8 text-gold py-4 animate-pulse">
             <Loader2 className="animate-spin" size={16} />
-            <span className="text-[13px] font-medium">Resolving account via Paystack...</span>
+            <span className="text-[13px] font-medium">Resolving via Paystack...</span>
           </div>
         )}
 
         {data.bankVerified && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-top-2">
-            <div className="bg-obsidian border border-gold/20 rounded-xl p-12 lg:p-16 flex items-center gap-12">
-              <div className="w-40 h-40 bg-gold/10 rounded-full flex items-center justify-center shrink-0">
-                <Landmark className="text-gold" size={20} />
+          <div className="space-y-10 animate-in fade-in slide-in-from-top-2">
+            <div className="bg-obsidian border border-gold/20 rounded-xl p-12 flex items-center gap-12">
+              <div className="w-36 h-36 bg-gold/10 rounded-full flex items-center justify-center shrink-0">
+                <Landmark className="text-gold" size={18} />
               </div>
               <div className="overflow-hidden">
-                <span className="text-[10px] font-bold text-ivory-40 uppercase tracking-wider block mb-1">Account Name</span>
-                <div className="text-[15px] font-headline font-bold text-gold truncate">{data.verifiedAccountName}</div>
+                <span className="text-[10px] font-bold text-ivory-40 uppercase tracking-wider block mb-0.5">Verified Account Name</span>
+                <div className="text-[14px] font-headline font-bold text-gold truncate leading-tight">{data.verifiedAccountName}</div>
               </div>
             </div>
 
             {data.nameMatchPassed ? (
-              <div className="flex items-center gap-8 text-emerald bg-emerald/10 border border-emerald/20 p-12 rounded-lg">
-                <CheckCircle2 size={16} className="shrink-0" />
-                <span className="text-[13px] font-bold">Name matches legal profile ✓</span>
+              <div className="flex items-center gap-8 text-emerald bg-emerald/10 border border-emerald/20 p-10 rounded-lg">
+                <CheckCircle2 size={14} className="shrink-0" />
+                <span className="text-[12px] font-bold">Name Match Verified ✓</span>
               </div>
             ) : (
-              <div className="bg-error-subtle border border-error-border p-12 rounded-lg space-y-8">
+              <div className="bg-error-subtle border border-error-border p-12 rounded-xl space-y-6">
                 <div className="flex items-center gap-8 text-error">
-                  <AlertCircle size={16} className="shrink-0" />
-                  <span className="text-[13px] font-bold">Name Mismatch Detected</span>
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span className="text-[12px] font-bold">Profile Name Mismatch</span>
                 </div>
-                <p className="text-[12px] text-error/80 leading-relaxed">
-                  Bank account name does not match the Full Name from Step 1. Please use an account in your legal name.
+                <p className="text-[11px] text-error/80 leading-relaxed">
+                  Bank name doesn't match your registered name. Weekly payouts require matched profiles.
                 </p>
                 <button 
                   onClick={onPrev} 
-                  className="text-[12px] font-bold text-gold hover:underline"
+                  className="text-[11px] font-bold text-gold hover:underline"
                 >
-                  Edit Legal Name
+                  Edit Registered Name
                 </button>
               </div>
             )}
@@ -204,19 +199,19 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
 
         {error && !isVerifying && (
           <div className="bg-error-subtle border border-error-border rounded-xl p-12 flex items-start gap-10 text-error text-[13px] animate-in slide-in-from-top-2">
-            <AlertCircle size={18} className="shrink-0 mt-1" />
-            <p>{error}</p>
+            <AlertCircle size={18} className="shrink-0 mt-0.5" />
+            <p className="leading-snug">{error}</p>
           </div>
         )}
 
-        <div className="pt-8">
+        <div className="pt-4">
           <GoldButton 
             onClick={handleFinish}
             isLoading={isFinishing}
             isDisabled={!data.bankVerified || !data.nameMatchPassed}
             className="h-[56px] text-[16px]"
           >
-            {isFinishing ? "Linking Account..." : "Finalize Registration"}
+            {isFinishing ? "Saving Account..." : "Finish Registration"}
           </GoldButton>
         </div>
       </div>

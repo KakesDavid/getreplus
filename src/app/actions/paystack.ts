@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -7,9 +8,9 @@
 export async function resolveBankAccount(accountNumber: string, bankCode: string) {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
-  if (!secretKey) {
-    console.error("PAYSTACK_SECRET_KEY is not defined in environment variables.");
-    return { success: false, error: "Server configuration error." };
+  if (!secretKey || secretKey === 'your_paystack_secret_key_here') {
+    console.warn("Paystack Secret Key is missing or using placeholder.");
+    return { success: false, error: "Payment gateway not configured. Please add your Paystack Secret Key to the .env file." };
   }
 
   try {
@@ -32,14 +33,14 @@ export async function resolveBankAccount(accountNumber: string, bankCode: string
     } else {
       return {
         success: false,
-        error: data.message || "Could not resolve account details.",
+        error: data.message || "Could not resolve account details. Please check the account number and bank.",
       };
     }
   } catch (error) {
     console.error("Paystack Resolution Error:", error);
     return {
       success: false,
-      error: "Network error during verification.",
+      error: "Network error during bank verification.",
     };
   }
 }
