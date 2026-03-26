@@ -15,19 +15,26 @@ export function Step5Success({ data }: StepProps) {
   useEffect(() => {
     // Primary Welcome Email via EmailJS
     const sendWelcomeEmail = async () => {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        console.warn('EmailJS environment variables are missing. Welcome email skipped.');
+        return;
+      }
+
       try {
-        // These credentials should be replaced with actual EmailJS keys in production
-        // parameters: to_email, to_name, username, platform_url
         await emailjs.send(
-          'YOUR_SERVICE_ID', 
-          'YOUR_TEMPLATE_ID', 
+          serviceId, 
+          templateId, 
           {
             to_email: data.email,
             to_name: data.fullName,
             username: data.username,
             platform_url: window.location.origin,
           },
-          'YOUR_PUBLIC_KEY'
+          publicKey
         );
       } catch (err) {
         // Fail silently as per requirement: do not block UI or show error to user
