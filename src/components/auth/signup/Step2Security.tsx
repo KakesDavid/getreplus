@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, ChevronLeft, Check, Info, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ChevronLeft, Check, Info, ShieldCheck, AlertCircle } from 'lucide-react';
 import { AuthInput } from '../shared/AuthInput';
 import { GoldButton } from '../shared/GoldButton';
 import { PasswordStrengthMeter } from '../shared/PasswordStrengthMeter';
@@ -26,16 +26,24 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
-  // Debounced Email Check (600ms)
+  // Debounced Email Check (500ms)
   useEffect(() => {
-    if (!data.email || !validateEmail(data.email)) {
+    if (!data.email) {
       setEmailStatus('idle');
       setEmailError(null);
       return;
     }
 
+    if (!validateEmail(data.email)) {
+      setEmailStatus('invalid');
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    setEmailStatus('loading');
+    setEmailError(null);
+
     const timer = setTimeout(async () => {
-      setEmailStatus('loading');
       try {
         const result = await checkEmailAvailability(db, data.email);
         if (result.available) {
@@ -45,40 +53,43 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
           setEmailStatus('invalid');
           setEmailError(
             <span className="flex items-center gap-4">
-              Email taken. <Link href="/login" className="text-gold underline font-semibold">Sign in?</Link>
+              Email taken. <Link href="/login" className="text-gold underline font-semibold">Sign in instead?</Link>
             </span>
           );
         }
       } catch (e) {
         setEmailStatus('idle');
       }
-    }, 600);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [data.email, db]);
 
+  // Password Validation
   const pDetails = validatePassword(data.password || '');
-  const isStrong = (data.password?.length || 0) >= 8 && 
-    ([pDetails.hasNumber, pDetails.hasUpper, pDetails.hasSpecial].filter(Boolean).length >= 2);
+  const isMinLength = (data.password?.length || 0) >= 8;
+  const hasComplexity = [pDetails.hasNumber, pDetails.hasUpper, pDetails.hasSpecial].filter(Boolean).length >= 1;
+  const isStrongEnough = isMinLength && hasComplexity;
   
   const passwordsMatch = data.password === data.confirmPassword && (data.confirmPassword?.length || 0) > 0;
 
-  const isValid = 
+  // Final Validation for Button
+  const canSubmit = 
     emailStatus === 'valid' && 
-    isStrong && 
+    isStrongEnough && 
     passwordsMatch && 
     data.termsAccepted;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || isLoading) return;
+    if (!canSubmit || isLoading) return;
 
     setIsLoading(true);
     setFirebaseError(null);
 
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
-      setFirebaseError("Creation took too long. Please check your network.");
+      setFirebaseError("Account creation is taking longer than expected. Please check your network.");
     }, 30000);
 
     try {
@@ -104,11 +115,11 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
     } catch (error: any) {
       clearTimeout(timeoutId);
       const msgMap: any = {
-        email_taken: "Email already in use.",
-        username_taken: "Username taken.",
-        invalid_referral: "Referral code expired."
+        email_taken: "This email is already registered.",
+        username_taken: "This username is already taken.",
+        invalid_referral: "The referral code is invalid or has expired."
       };
-      setFirebaseError(msgMap[error.message] || "Account creation failed. Try again.");
+      setFirebaseError(msgMap[error.message] || "Failed to create account. Please try again.");
       setIsLoading(false);
     }
   };
@@ -116,122 +127,126 @@ export function Step2Security({ data, onNext, onPrev, onUpdate }: StepProps) {
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
       {/* Header Area */}
-      <div className="flex items-center justify-between mb-20">
+      <div className="flex items-center justify-between mb-24">
         <button
           onClick={onPrev}
-          className="w-32 h-32 flex items-center justify-center text-ivory-40 hover:text-gold transition-colors -ml-8"
+          className="w-40 h-40 flex items-center justify-center text-ivory-40 hover:text-gold transition-colors -ml-12"
           type="button"
+          aria-label="Back to personal details"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={24} />
         </button>
-        <div className="flex items-center gap-6 bg-white-15 px-10 py-4 rounded-full">
-           <ShieldCheck size={12} className="text-gold" />
-           <span className="text-[10px] font-bold text-gold uppercase tracking-widest">Secure Step</span>
+        <div className="flex items-center gap-8 bg-white/5 border border-gold/20 px-12 py-6 rounded-full">
+           <ShieldCheck size={14} className="text-gold" />
+           <span className="text-[11px] font-bold text-gold uppercase tracking-widest">Security Step</span>
         </div>
       </div>
 
       <div className="mb-24">
-        <h2 className="font-headline font-bold text-ivory text-20 lg:text-24 leading-tight">Security & Access</h2>
-        <p className="text-ivory-50 text-13 lg:text-14 mt-2">Create your login credentials safely.</p>
+        <h2 className="font-headline font-bold text-ivory text-24 lg:text-28 leading-tight">Security & Access</h2>
+        <p className="text-ivory-50 text-14 mt-4">Create your login credentials safely.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-20">
         {/* Email Field */}
         <AuthInput
           label="Email Address"
           type="email"
+          autoComplete="email"
           placeholder="e.g. emeka@gmail.com"
           leftIcon={<Mail />}
           value={data.email}
           onChange={(e) => onUpdate({ email: e.target.value })}
           validationState={emailStatus}
           errorMessage={emailError}
+          required
         />
 
         {/* Password Group */}
-        <div className="bg-white/5 border border-white-15 rounded-2xl p-16 lg:p-20 space-y-16">
-          <div className="space-y-4">
+        <div className="bg-white/5 border border-white-15 rounded-2xl p-20 space-y-20">
+          <div className="space-y-8">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-bold text-ivory-40 uppercase tracking-wider">
+              <label className="text-[12px] font-bold text-ivory-40 uppercase tracking-wider">
                 Password
               </label>
               <div className="group relative">
-                <Info size={14} className="text-ivory-25 cursor-help hover:text-gold transition-colors" />
-                <div className="absolute bottom-full right-0 mb-8 w-[180px] p-10 bg-obsidian border border-gold-border rounded-xl text-[10px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
-                  Min. 8 chars, 1 number, 1 uppercase.
+                <Info size={16} className="text-ivory-25 cursor-help hover:text-gold transition-colors" />
+                <div className="absolute bottom-full right-0 mb-8 w-[220px] p-12 bg-obsidian border border-gold-border rounded-xl text-[11px] text-ivory-60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
+                  Min. 8 characters with at least one number or special character.
                 </div>
               </div>
             </div>
             <AuthInput
               label=""
               type="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               leftIcon={<Lock />}
               value={data.password}
               onChange={(e) => onUpdate({ password: e.target.value })}
-              className="h-48"
+              className="h-[52px]"
             />
             <PasswordStrengthMeter password={data.password} />
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-white/5">
-            <label className="text-[11px] font-bold text-ivory-40 uppercase tracking-wider block">
+          <div className="space-y-8 pt-8 border-t border-white/5">
+            <label className="text-[12px] font-bold text-ivory-40 uppercase tracking-wider block">
               Confirm Password
             </label>
             <AuthInput
               label=""
               type="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               leftIcon={<Lock />}
               value={data.confirmPassword}
               onChange={(e) => onUpdate({ confirmPassword: e.target.value })}
               validationState={data.confirmPassword ? (passwordsMatch ? 'valid' : 'invalid') : 'idle'}
-              errorMessage={data.confirmPassword && !passwordsMatch ? "Does not match" : null}
-              className="h-48"
+              errorMessage={data.confirmPassword && !passwordsMatch ? "Passwords do not match" : null}
+              className="h-[52px]"
             />
           </div>
         </div>
 
         {/* Terms Checkbox */}
         <div className="py-8">
-          <label className="flex items-start gap-10 cursor-pointer group select-none">
+          <label className="flex items-start gap-12 cursor-pointer group select-none">
             <div className="relative mt-2">
               <input
                 type="checkbox"
                 className="sr-only"
                 checked={data.termsAccepted}
                 onChange={(e) => onUpdate({ termsAccepted: e.target.checked })}
-                required
               />
               <div className={cn(
-                "w-[20px] h-[20px] rounded-md border-[1.5px] transition-all flex items-center justify-center",
-                data.termsAccepted ? "bg-gold-gradient border-transparent" : "border-white-20 bg-input-bg group-hover:border-gold/50"
+                "w-[22px] h-[22px] rounded-md border-[1.5px] transition-all flex items-center justify-center",
+                data.termsAccepted ? "bg-gold-gradient border-transparent" : "border-white/20 bg-input-bg group-hover:border-gold/50"
               )}>
-                {data.termsAccepted && <Check size={12} className="text-obsidian animate-in zoom-in-50 duration-200" />}
+                {data.termsAccepted && <Check size={14} className="text-obsidian animate-in zoom-in-50 duration-200" />}
               </div>
             </div>
-            <span className="text-[12px] font-body text-ivory-40 leading-relaxed group-hover:text-ivory-70 transition-colors pt-1">
+            <span className="text-[13px] font-body text-ivory-40 leading-relaxed group-hover:text-ivory-70 transition-colors pt-2">
               I agree to the <Link href="/terms" className="text-gold font-medium hover:underline">Terms</Link> and <Link href="/privacy" className="text-gold font-medium hover:underline">Privacy Policy</Link>.
             </span>
           </label>
         </div>
 
         {/* Action & Global Error */}
-        <div className="space-y-12">
+        <div className="space-y-16 pt-8">
           {firebaseError && (
-            <div className="bg-error-subtle border border-error-border rounded-xl p-10 flex items-center gap-8 text-error text-[12px] font-medium animate-in slide-in-from-top-2">
-              <Info size={14} className="shrink-0" />
-              {firebaseError}
+            <div className="bg-error-subtle border border-error-border rounded-xl p-12 flex items-start gap-10 text-error text-[13px] font-medium animate-in slide-in-from-top-2">
+              <AlertCircle size={18} className="shrink-0 mt-1" />
+              <p>{firebaseError}</p>
             </div>
           )}
 
           <GoldButton 
             type="submit" 
             isLoading={isLoading} 
-            isDisabled={!isValid}
-            className="h-[52px]"
+            isDisabled={!canSubmit}
+            className="h-[56px] text-16"
           >
-            Create Secure Account
+            Create My Account
           </GoldButton>
         </div>
       </form>
