@@ -33,9 +33,6 @@ export function SignupShell() {
   return (
     <div className="w-full max-w-[480px] animate-in fade-in duration-500 mx-auto py-24 lg:py-40">
       <div className="flex flex-col items-center mb-24 lg:mb-32">
-        <div className="w-36 h-36 bg-secondary rounded-xl flex items-center justify-center mb-12 shadow-button-glow animate-pulse-glow">
-          <span className="font-headline font-bold text-gold text-18">G+</span>
-        </div>
         <span className="font-subheadline font-medium text-ivory-40 text-[13px] mb-2 uppercase tracking-widest">Registration</span>
         <h1 className="font-headline font-bold text-ivory text-[22px] lg:text-[26px]">Join GetrePlus</h1>
       </div>
