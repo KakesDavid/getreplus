@@ -13,32 +13,42 @@ function DashboardContent() {
 
   // Handle Activation Prompt from URL
   useEffect(() => {
-    if (searchParams.get('prompt') === 'activate') {
+    if (searchParams && searchParams.get('prompt') === 'activate') {
       setIsActivationModalOpen(true);
-      // Clean URL after modal is triggered to prevent re-opening on refresh
       router.replace('/dashboard');
     }
   }, [searchParams, router]);
+
+  const getFirstName = () => {
+    if (loading) return '...';
+    if (user?.fullName) {
+      return user.fullName.split(' ')[0];
+    }
+    return 'Member';
+  };
+
+  const isPremium = () => {
+    return user?.tier === 'premium';
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <header className="mb-8">
         <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full mb-4">
           <span className="text-[10px] font-bold text-gold uppercase tracking-wider">
-            {user?.tier === 'premium' ? 'Premium Member ⭐' : 'Standard Member'}
+            {isPremium() ? 'Premium Member ⭐' : 'Standard Member'}
           </span>
         </div>
         <h1 className="font-headline font-bold text-2xl lg:text-3xl text-ivory">
-          Welcome back, {loading ? '...' : user?.fullName?.split(' ')[0] || 'Member'} 👋
+          Welcome back, {getFirstName()} 👋
         </h1>
         <p className="text-ivory/50 text-sm mt-1">Here is what is happening with your account today.</p>
       </header>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Main Dashboard Grid */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center border-dashed">
           <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-24">🚀</span>
+            <span className="text-2xl">🚀</span>
           </div>
           <h2 className="font-headline font-bold text-xl text-ivory mb-2">Platform Launching Phase 2</h2>
           <p className="text-ivory/40 text-sm max-w-[320px] mx-auto">
@@ -47,17 +57,16 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Activation Modal Placeholder - Will be implemented in Phase 2 */}
       {isActivationModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-surface border border-gold/20 p-8 rounded-3xl max-w-md w-full text-center">
-            <div className="text-40 mb-4">💰</div>
+          <div className="bg-[#111111] border border-gold/20 p-8 rounded-3xl max-w-md w-full text-center">
+            <div className="text-4xl mb-4">💰</div>
             <h3 className="font-headline font-bold text-2xl text-ivory mb-2">Activate Your Account</h3>
             <p className="text-ivory/60 text-sm mb-8 leading-relaxed">
               To start sharing your link and earning every Friday, you need to choose an activation plan.
             </p>
             <div className="space-y-3">
-              <button className="w-full h-14 bg-gold-gradient text-obsidian font-bold rounded-xl shadow-lg">Choose Plan & Pay</button>
+              <button className="w-full h-14 bg-gold text-obsidian font-bold rounded-xl shadow-lg">Choose Plan & Pay</button>
               <button 
                 onClick={() => setIsActivationModalOpen(false)}
                 className="w-full h-12 text-ivory/40 text-sm font-medium"
