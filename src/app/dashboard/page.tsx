@@ -1,11 +1,24 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/layout/DashboardShell';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { LogOut, ShieldAlert, User, Mail, Phone, Landmark } from 'lucide-react';
 
 function ProfileContent() {
   const { user, loading } = useDashboardData();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (window.confirm("Are you sure you want to sign out?")) {
+      await signOut(auth);
+      router.push('/login');
+    }
+  };
 
   if (loading) {
     return (
@@ -15,147 +28,103 @@ function ProfileContent() {
           <div className="h-4 w-64 bg-white/10 rounded mt-2 animate-pulse"></div>
         </header>
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-white/10 rounded-full animate-pulse"></div>
-            <div className="space-y-2">
-              <div className="h-6 w-32 bg-white/10 rounded animate-pulse"></div>
-              <div className="h-4 w-24 bg-white/10 rounded animate-pulse"></div>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="h-5 w-full bg-white/10 rounded animate-pulse"></div>
-            <div className="h-5 w-full bg-white/10 rounded animate-pulse"></div>
-            <div className="h-5 w-3/4 bg-white/10 rounded animate-pulse"></div>
+          <div className="space-y-4">
+            <div className="h-12 w-full bg-white/10 rounded animate-pulse"></div>
+            <div className="h-12 w-full bg-white/10 rounded animate-pulse"></div>
           </div>
         </div>
       </div>
     );
   }
 
-  const maskAccountNumber = (accountNumber: string) => {
-    if (!accountNumber) return 'Not added';
-    if (accountNumber.length <= 4) return '****';
-    return `****${accountNumber.slice(-4)}`;
-  };
-
-  const getTierDisplay = () => {
-    if (!user) return 'Standard';
-    return user.tier === 'premium' ? 'Premium ⭐' : 'Standard';
-  };
-
-  const isAccountActive = () => {
-    return user?.isActive === true;
-  };
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <header className="mb-8">
-        <h1 className="font-headline font-bold text-2xl lg:text-3xl text-ivory">Profile & Settings</h1>
-        <p className="text-ivory/50 text-sm mt-1">Manage your account information</p>
+        <h1 className="font-headline font-bold text-2xl lg:text-3xl text-ivory">Your Profile</h1>
+        <p className="text-ivory/50 text-sm mt-1">Manage your account and bank details.</p>
       </header>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gold/20 rounded-full flex items-center justify-center border-2 border-gold/30">
-              <span className="text-3xl font-bold text-gold">
-                {user?.fullName?.[0]?.toUpperCase() || 'U'}
-              </span>
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-ivory">{user?.fullName || 'Member'}</h2>
-              <p className="text-ivory/40 text-sm">@{user?.username || 'username'}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTierDisplay() === 'Premium ⭐' ? 'bg-emerald/20 text-emerald' : 'bg-gold/20 text-gold'}`}>
-                  {getTierDisplay()}
-                </span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isAccountActive() ? 'bg-emerald/20 text-emerald' : 'bg-gold/20 text-gold'}`}>
-                  {isAccountActive() ? 'Active ✅' : 'Not Activated'}
-                </span>
-              </div>
-            </div>
+      <div className="space-y-6">
+        {/* Personal Info Card */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-3">
+            <User size={18} className="text-gold" />
+            <h2 className="font-headline font-bold text-sm text-ivory uppercase tracking-wider">Identity Information</h2>
           </div>
-        </div>
-
-        <div className="p-6">
-          <h3 className="text-sm font-semibold text-ivory/60 uppercase tracking-wider mb-4">Account Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-black/20 p-3 rounded-xl">
-              <p className="text-ivory/40 text-xs">Full Name</p>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-ivory/30 uppercase tracking-widest">Full Name</label>
               <p className="text-ivory font-medium">{user?.fullName || 'Not set'}</p>
             </div>
-            <div className="bg-black/20 p-3 rounded-xl">
-              <p className="text-ivory/40 text-xs">Username</p>
-              <p className="text-ivory font-medium">@{user?.username || 'Not set'}</p>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-ivory/30 uppercase tracking-widest">Username</label>
+              <p className="text-gold font-bold">@{user?.username || 'Not set'}</p>
             </div>
-            <div className="bg-black/20 p-3 rounded-xl">
-              <p className="text-ivory/40 text-xs">Email</p>
-              <p className="text-ivory font-medium">{user?.email || 'Not set'}</p>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-ivory/30 uppercase tracking-widest">Email Address</label>
+              <p className="text-ivory/70">{user?.email || 'Not set'}</p>
             </div>
-            <div className="bg-black/20 p-3 rounded-xl">
-              <p className="text-ivory/40 text-xs">Phone</p>
-              <p className="text-ivory font-medium">{user?.phone || 'Not set'}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-white/10">
-          <h3 className="text-sm font-semibold text-ivory/60 uppercase tracking-wider mb-4">Bank Account</h3>
-          {user?.bankName && user?.bankAccountNumber ? (
-            <div className="bg-black/20 p-4 rounded-xl border border-white/5">
-              <div className="flex flex-col md:flex-row justify-between gap-4">
-                <div>
-                  <p className="text-ivory/40 text-xs">Bank Name</p>
-                  <p className="text-ivory font-medium">{user.bankName}</p>
-                </div>
-                <div>
-                  <p className="text-ivory/40 text-xs">Account Number</p>
-                  <p className="text-ivory font-mono">{maskAccountNumber(user.bankAccountNumber)}</p>
-                </div>
-                <div>
-                  <p className="text-ivory/40 text-xs">Account Name</p>
-                  <p className="text-ivory text-sm">{user.bankAccountName || 'Not verified'}</p>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-white/10">
-                <p className="text-[10px] text-emerald flex items-center gap-1">✓ Verified by Paystack</p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-gold/5 border border-gold/20 rounded-xl p-6 text-center">
-              <p className="text-ivory/60 text-sm">No bank account linked</p>
-              <p className="text-ivory/40 text-xs mt-1">Bank details are collected during signup</p>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 border-t border-white/10">
-          <h3 className="text-sm font-semibold text-ivory/60 uppercase tracking-wider mb-4">Referral Statistics</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-black/20 p-3 rounded-xl text-center">
-              <p className="text-2xl font-bold text-gold">{user?.totalReferrals || 0}</p>
-              <p className="text-ivory/40 text-xs">Total Referrals</p>
-            </div>
-            <div className="bg-black/20 p-3 rounded-xl text-center">
-              <p className="text-2xl font-bold text-gold">{user?.weeklyReferrals || 0}</p>
-              <p className="text-ivory/40 text-xs">This Week</p>
-            </div>
-            <div className="bg-black/20 p-3 rounded-xl text-center">
-              <p className="text-2xl font-bold text-gold">₦{(user?.totalReferrals || 0) * (user?.tier === 'premium' ? 1500 : 500)}</p>
-              <p className="text-ivory/40 text-xs">Total Earned</p>
-            </div>
-            <div className="bg-black/20 p-3 rounded-xl text-center">
-              <p className="text-2xl font-bold text-gold">{user?.referralCountCycle || 0}/5</p>
-              <p className="text-ivory/40 text-xs">Current Cycle</p>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-ivory/30 uppercase tracking-widest">Phone Number</label>
+              <p className="text-ivory/70">{user?.phone || 'Not set'}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-6 border-t border-white/10">
-          <h3 className="text-sm font-semibold text-error uppercase tracking-wider mb-4">Danger Zone</h3>
-          <button className="bg-error/10 border border-error/20 text-error px-4 py-2 rounded-xl text-sm font-medium hover:bg-error/20 transition-colors">
-            Sign Out
-          </button>
+        {/* Bank Account Card */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-3">
+            <Landmark size={18} className="text-gold" />
+            <h2 className="font-headline font-bold text-sm text-ivory uppercase tracking-wider">Payout Account</h2>
+          </div>
+          <div className="p-6">
+            {user?.bankName && user?.bankAccountNumber ? (
+              <div className="bg-black/20 p-4 rounded-xl border border-white/5">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="space-y-1">
+                    <p className="text-xl font-headline font-bold text-gold">{user.bankName}</p>
+                    <p className="text-ivory/40 text-xs uppercase tracking-tighter">Verified Withdrawal Channel</p>
+                  </div>
+                  <div className="w-10 h-10 bg-emerald/10 rounded-full flex items-center justify-center text-emerald">✓</div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                  <div>
+                    <label className="text-[9px] font-bold text-ivory/30 uppercase">Account Number</label>
+                    <p className="text-ivory font-mono tracking-wider">****{user.bankAccountNumber.slice(-4)}</p>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-ivory/30 uppercase">Beneficiary Name</label>
+                    <p className="text-ivory truncate">{user.bankAccountName || 'Not verified'}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-ivory/40 text-sm">No bank account linked yet.</p>
+                <p className="text-ivory/30 text-xs mt-1">Bank details are collected during signup</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Security / Danger Zone */}
+        <div className="bg-error/5 border border-error/20 rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-error/10 bg-error/[0.02] flex items-center gap-3">
+            <ShieldAlert size={18} className="text-error" />
+            <h2 className="font-headline font-bold text-sm text-error uppercase tracking-wider">Danger Zone</h2>
+          </div>
+          <div className="p-6">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-3 text-error font-bold hover:underline"
+            >
+              <LogOut size={18} />
+              Sign Out of Account
+            </button>
+            <p className="mt-2 text-error/40 text-xs">
+              This will end your current session. You will need your credentials to log back in.
+            </p>
+          </div>
         </div>
       </div>
     </div>
