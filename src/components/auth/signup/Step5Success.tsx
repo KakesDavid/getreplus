@@ -1,11 +1,10 @@
-
 'use client';
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { PartyPopper, ChevronRight, LayoutDashboard, Rocket } from 'lucide-react';
 import { GoldButton } from '../shared/GoldButton';
 import { SignupData } from '@/hooks/useSignupState';
-import { sendWelcomeEmail } from '@/utils/emailjs';
+import { sendWelcomeEmail } from '@/utils/resend';
 import { cn } from '@/lib/utils';
 
 interface StepProps {
@@ -16,10 +15,9 @@ export function Step5Success({ data }: StepProps) {
   const hasSentEmail = useRef(false);
 
   useEffect(() => {
-    // Primary Welcome Email via the EmailJS utility
+    // Send welcome email via Resend
     if (!hasSentEmail.current && data.email && data.fullName) {
-      const platformUrl = window.location.origin;
-      sendWelcomeEmail(data.fullName, platformUrl, data.email);
+      sendWelcomeEmail(data.email, data.fullName);
       hasSentEmail.current = true;
     }
   }, [data.email, data.fullName]);
