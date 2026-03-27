@@ -1,4 +1,4 @@
-// This file is deactivated to resolve a routing conflict with src/app/dashboard/page.tsx
-// To fully resolve, delete this file from the filesystem.
-export default function Deactivated() { return null; }
+// This file is deprecated. The dashboard has been migrated to src/app/dashboard/page.tsx.
+// To fully resolve routing conflicts, please manually delete this file.
+export default function ConflictResolver() { return null; }
 export const getStaticProps = () => ({ notFound: true });

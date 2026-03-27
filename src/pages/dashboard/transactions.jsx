@@ -1,3 +1,4 @@
-// This file is deactivated to resolve a routing conflict with src/app/dashboard/transactions/page.tsx
-export default function Deactivated() { return null; }
+// This file is deprecated. Migrated to src/app/dashboard/transactions/page.tsx.
+// To fully resolve routing conflicts, please manually delete this file.
+export default function ConflictResolver() { return null; }
 export const getStaticProps = () => ({ notFound: true });
