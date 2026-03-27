@@ -10,28 +10,38 @@ import {
   Sparkles, 
   Receipt, 
   UserCircle,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { colors } from '@/styles/design-tokens';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Referrals', href: '/dashboard/referrals', icon: Users },
   { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
-  { name: 'Spin Wheel', href: '/dashboard/spin', icon: Sparkles },
-  { name: 'Transactions', href: '/dashboard/transactions', icon: Receipt },
-  { name: 'Profile', href: '/dashboard/profile', icon: UserCircle }
+  { name: 'Spin Wheel', icon: Sparkles, href: '/dashboard/spin' },
+  { name: 'Transactions', icon: Receipt, href: '/dashboard/transactions' },
+  { name: 'Profile', icon: UserCircle, href: '/dashboard/profile' }
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const auth = useAuth();
   const { user, loading } = useDashboardData();
 
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const handleLogout = async () => {
+    if (window.confirm("Are you sure you want to sign out?")) {
+      await signOut(auth);
+      router.push('/login');
+    }
   };
 
   return (
@@ -74,7 +84,7 @@ export function SidebarNav() {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -90,7 +100,7 @@ export function SidebarNav() {
               }`}
             >
               {isActive && (
-                <span className="absolute left-0 w-1 h-5 bg-gold rounded-r-full" />
+                <span className="absolute left-0 w-1 h-5 bg-gold rounded-r-full shadow-[0_0_8px_rgba(183,134,44,0.5)]" />
               )}
               <Icon size={18} className={isActive ? 'text-gold' : 'text-ivory/40 group-hover:text-ivory/70'} />
               <span className="text-sm font-medium">{item.name}</span>
@@ -99,29 +109,38 @@ export function SidebarNav() {
         })}
       </nav>
 
-      {/* Activation Status */}
-      <div className="mt-auto px-3 py-3 border-t border-white/5">
-        {loading ? (
-          <div className="h-16 w-full bg-white/5 animate-pulse rounded-xl" />
-        ) : (
-          !user?.isActive ? (
-            <div className="bg-gold/5 border border-gold/15 rounded-xl p-3">
-              <p className="text-[10px] font-bold text-gold/60 uppercase tracking-widest mb-2">Account Status</p>
-              <p className="text-xs font-medium text-ivory/70 mb-3">Not Activated</p>
-              <button 
-                onClick={() => router.push('/dashboard?prompt=activate')}
-                className="w-full h-9 bg-gold-gradient text-obsidian rounded-lg text-[11px] font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-              >
-                Activate Now <ChevronRight size={12} />
-              </button>
-            </div>
+      {/* Bottom Actions */}
+      <div className="mt-auto px-3 space-y-2">
+        <button 
+          onClick={handleLogout}
+          className="w-full h-11 rounded-xl flex items-center gap-3 px-3 text-error/60 hover:text-error hover:bg-error/5 transition-all group"
+        >
+          <LogOut size={18} className="group-hover:scale-110 transition-transform" />
+          <span className="text-sm font-medium">Sign Out</span>
+        </button>
+
+        <div className="py-3 border-t border-white/5">
+          {loading ? (
+            <div className="h-16 w-full bg-white/5 animate-pulse rounded-xl" />
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2">
-              <div className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
-              <span className="text-xs font-semibold text-emerald">Account Active</span>
-            </div>
-          )
-        )}
+            !user?.isActive ? (
+              <div className="bg-gold/5 border border-gold/15 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-gold/60 uppercase tracking-widest mb-2">Account Status</p>
+                <button 
+                  onClick={() => router.push('/dashboard?prompt=activate')}
+                  className="w-full h-9 bg-gold-gradient text-obsidian rounded-lg text-[11px] font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                  Activate Now <ChevronRight size={12} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2 bg-emerald/5 rounded-xl border border-emerald/10">
+                <div className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald">Account Active</span>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </aside>
   );
