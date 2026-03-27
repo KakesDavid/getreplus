@@ -1,4 +1,3 @@
-// This file is deprecated. Moved to src/app/dashboard/transactions/page.tsx
-export default function DeprecatedTransactions() {
-  return null;
-}
+// This file is deactivated to resolve a routing conflict with src/app/dashboard/transactions/page.tsx
+export default function Deactivated() { return null; }
+export const getStaticProps = () => ({ notFound: true });

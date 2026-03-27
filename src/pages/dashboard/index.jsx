@@ -1,5 +1,4 @@
-// This file is deprecated. GetrePlus uses the App Router.
-// The dashboard logic is located in src/app/dashboard/page.tsx
-export default function DeprecatedDashboard() {
-  return null;
-}
+// This file is deactivated to resolve a routing conflict with src/app/dashboard/page.tsx
+// To fully resolve, delete this file from the filesystem.
+export default function Deactivated() { return null; }
+export const getStaticProps = () => ({ notFound: true });

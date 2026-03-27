@@ -1,4 +1,3 @@
-// This file is deprecated. Moved to src/app/dashboard/referrals/page.tsx
-export default function DeprecatedReferrals() {
-  return null;
-}
+// This file is deactivated to resolve a routing conflict with src/app/dashboard/referrals/page.tsx
+export default function Deactivated() { return null; }
+export const getStaticProps = () => ({ notFound: true });
