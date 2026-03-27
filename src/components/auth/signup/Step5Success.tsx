@@ -7,6 +7,10 @@ import { SignupData } from '@/hooks/useSignupState';
 import { sendWelcomeEmail } from '@/utils/resend';
 import { cn } from '@/lib/utils';
 
+// Set this to false to temporarily disable welcome emails
+// Re-enable when Resend domain is properly configured
+const EMAIL_ENABLED = false;
+
 interface StepProps {
   data: SignupData;
 }
@@ -15,10 +19,12 @@ export function Step5Success({ data }: StepProps) {
   const hasSentEmail = useRef(false);
 
   useEffect(() => {
-    // Send welcome email via Resend
-    if (!hasSentEmail.current && data.email && data.fullName) {
+    // Send welcome email via Resend (only if enabled)
+    if (EMAIL_ENABLED && !hasSentEmail.current && data.email && data.fullName) {
       sendWelcomeEmail(data.email, data.fullName);
       hasSentEmail.current = true;
+    } else if (!EMAIL_ENABLED && data.email) {
+      console.log('📧 Email disabled - Would send welcome email to:', data.email);
     }
   }, [data.email, data.fullName]);
 
