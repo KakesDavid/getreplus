@@ -32,33 +32,17 @@ function ProfileContent() {
     );
   }
 
-  // Safely mask bank account number
   const maskAccountNumber = (accountNumber: string) => {
     if (!accountNumber) return 'Not added';
     if (accountNumber.length <= 4) return '****';
     return `****${accountNumber.slice(-4)}`;
   };
 
-  // Format date
-  const formatDate = (date: any) => {
-    if (!date) return 'Not available';
-    try {
-      if (date.toDate) {
-        return date.toDate().toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
-      }
-      return new Date(date).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch {
-      return 'Not available';
-    }
-  };
-
-  // Get tier display
   const getTierDisplay = () => {
     if (!user) return 'Standard';
     return user.tier === 'premium' ? 'Premium ⭐' : 'Standard';
   };
 
-  // Get account status
   const isAccountActive = () => {
     return user?.isActive === true;
   };
@@ -70,7 +54,6 @@ function ProfileContent() {
         <p className="text-ivory/50 text-sm mt-1">Manage your account information</p>
       </header>
 
-      {/* Profile Header Card */}
       <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-4">
@@ -94,7 +77,6 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Account Information */}
         <div className="p-6">
           <h3 className="text-sm font-semibold text-ivory/60 uppercase tracking-wider mb-4">Account Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -114,14 +96,9 @@ function ProfileContent() {
               <p className="text-ivory/40 text-xs">Phone</p>
               <p className="text-ivory font-medium">{user?.phone || 'Not set'}</p>
             </div>
-            <div className="bg-black/20 p-3 rounded-xl">
-              <p className="text-ivory/40 text-xs">Member Since</p>
-              <p className="text-ivory font-medium">{formatDate(user?.createdAt)}</p>
-            </div>
           </div>
         </div>
 
-        {/* Bank Account Section */}
         <div className="p-6 border-t border-white/10">
           <h3 className="text-sm font-semibold text-ivory/60 uppercase tracking-wider mb-4">Bank Account</h3>
           {user?.bankName && user?.bankAccountNumber ? (
@@ -141,9 +118,7 @@ function ProfileContent() {
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-white/10">
-                <p className="text-[10px] text-emerald flex items-center gap-1">
-                  <span>✓</span> Verified by Paystack
-                </p>
+                <p className="text-[10px] text-emerald flex items-center gap-1">✓ Verified by Paystack</p>
               </div>
             </div>
           ) : (
@@ -154,7 +129,6 @@ function ProfileContent() {
           )}
         </div>
 
-        {/* Referral Statistics */}
         <div className="p-6 border-t border-white/10">
           <h3 className="text-sm font-semibold text-ivory/60 uppercase tracking-wider mb-4">Referral Statistics</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -177,18 +151,9 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Danger Zone */}
         <div className="p-6 border-t border-white/10">
           <h3 className="text-sm font-semibold text-error uppercase tracking-wider mb-4">Danger Zone</h3>
-          <button
-            onClick={() => {
-              if (confirm('Are you sure you want to sign out?')) {
-                // Sign out logic will be added later
-                console.log('Sign out clicked');
-              }
-            }}
-            className="bg-error/10 border border-error/20 text-error px-4 py-2 rounded-xl text-sm font-medium hover:bg-error/20 transition-colors"
-          >
+          <button className="bg-error/10 border border-error/20 text-error px-4 py-2 rounded-xl text-sm font-medium hover:bg-error/20 transition-colors">
             Sign Out
           </button>
         </div>
