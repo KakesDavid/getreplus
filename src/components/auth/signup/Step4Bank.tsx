@@ -36,12 +36,12 @@ export function Step4Bank({ data, onNext, onPrev, onUpdate }: StepProps) {
       
       if (result.success) {
         const verifiedName = result.accountName;
-        const userParts = data.fullName.toLowerCase().split(' ').filter(p => p.length > 2);
-        const verifiedParts = verifiedName.toLowerCase().split(' ').filter(p => p.length > 2);
+        const userParts = data.fullName.toLowerCase().split(' ').filter((p: string) => p.length > 2);
+        const verifiedParts = verifiedName.toLowerCase().split(' ').filter((p: string) => p.length > 2);
         
         // At least one significant name part should match
-        const nameMatch = userParts.some(part => 
-          verifiedParts.some(vp => vp.includes(part) || part.includes(vp))
+        const nameMatch = userParts.some((part: string) => 
+          verifiedParts.some((vp: string) => vp.includes(part) || part.includes(vp))
         );
 
         const verificationResult = {
