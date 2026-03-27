@@ -31,7 +31,9 @@ export function Pricing() {
             </div>
             <div className="flex items-center gap-1.5 text-[13px] text-[#92650A] font-medium mb-10">
               <span>+ ₦50 Paystack fee</span>
-              <Info size={14} className="cursor-help" title="Paystack charges a small processing fee." />
+              <span title="Paystack charges a small processing fee." className="cursor-help inline-flex">
+                <Info size={14} />
+              </span>
             </div>
 
             <div className="w-full h-px bg-secondary/10 mb-10" />
@@ -78,7 +80,9 @@ export function Pricing() {
             </div>
             <div className="flex items-center gap-1.5 text-[13px] text-ivory/75 mb-10">
               <span>+ ₦100 Paystack fee</span>
-              <Info size={14} className="cursor-help" title="Paystack charges a small processing fee." />
+              <span title="Paystack charges a small processing fee." className="cursor-help inline-flex">
+                <Info size={14} />
+              </span>
             </div>
 
             <div className="w-full h-px bg-gold/20 mb-10" />
