@@ -19,7 +19,7 @@ service cloud.firestore {
     match /users/{uid} {
       // Allow get for anyone to validate referrers by name
       allow get: if true;
-      // Allow the owner to read their full profile
+      // Allow the owner to read (get/list) their full profile
       allow read: if isOwner(uid);
       
       allow create: if isOwner(uid) 
@@ -36,13 +36,14 @@ service cloud.firestore {
             .hasOnly(['bankAccount', 'accountStatus', 'isActive', 'updatedAt', 'lastLoginAt', 'earningWallet', 'mainWallet', 'referralCountCycle', 'totalReferrals', 'weeklyReferrals']);
       
       // Notifications Subcollection
+      // Explicitly splitting read into get and list for better rule evaluation
       match /notifications/{id} {
-        allow read, update: if isOwner(uid);
+        allow get, list, update: if isOwner(uid);
       }
 
       // Transactions Subcollection
       match /transactions/{id} {
-        allow read: if isOwner(uid);
+        allow get, list: if isOwner(uid);
       }
     }
 
@@ -71,5 +72,7 @@ service cloud.firestore {
     match /{path=**} {
       allow read, write: if false;
     }
+    
+    // Deployment trigger: Updated subcollection permissions for better evaluation.
   }
 }
