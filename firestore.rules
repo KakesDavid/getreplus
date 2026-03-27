@@ -17,9 +17,10 @@ service cloud.firestore {
 
     // USERS
     match /users/{uid} {
-      // Allow get for referral validation (checking fullName and accountStatus)
+      // Allow get for anyone to validate referrers by name
       allow get: if true;
-      allow list: if false;
+      // Allow the owner to read their full profile
+      allow read: if isOwner(uid);
       
       allow create: if isOwner(uid) 
         && request.resource.data.uid == uid
@@ -32,9 +33,17 @@ service cloud.firestore {
       
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['bankAccount', 'accountStatus', 'isActive', 'updatedAt', 'lastLoginAt']);
+            .hasOnly(['bankAccount', 'accountStatus', 'isActive', 'updatedAt', 'lastLoginAt', 'earningWallet', 'mainWallet', 'referralCountCycle', 'totalReferrals', 'weeklyReferrals']);
       
-      allow delete: if false;
+      // Notifications Subcollection
+      match /notifications/{id} {
+        allow read, update: if isOwner(uid);
+      }
+
+      // Transactions Subcollection
+      match /transactions/{id} {
+        allow read: if isOwner(uid);
+      }
     }
 
     // USERNAMES LOOKUP
