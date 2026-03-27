@@ -1,6 +1,2 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-}
-
-module.exports = nextConfig
+// This file is empty to avoid conflict with next.config.ts
+module.exports = {};
